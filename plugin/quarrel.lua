@@ -1,0 +1,75 @@
+if vim.g.loaded_quarrel == 1 then return end
+vim.g.loaded_quarrel = 1
+
+local qpath = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel")
+local db = vim.fs.joinpath(qpath, "arglists.msgpack")
+if not vim.uv.fs_stat(qpath) then vim.fn.writefile({}, db) end
+
+---@toc_entry CONFIGURATION
+---@tag Quarrel-configuration
+---@class quarrel.Config
+---
+---@field database string Path to the database file where arglists are stored.
+---     Default: `vim.fn.stdpath("data") .. "/quarrel/arglists.msgpack"`
+---@field keymaps boolean If `true`, enables default keymaps for navigating the
+---     arglist. See |Quarrel-keymaps|.
+---     Default: `false`
+---
+---@usage `vim.g.quarrel = { keymaps = true }`
+local DEFAULTS = {
+        database = db,
+        keymaps = false,
+}
+
+vim.g.quarrel = vim.tbl_deep_extend("force", DEFAULTS, vim.g.quarrel or {})
+
+-- Keymaps {{{
+
+---@tag Quarrel-keymaps
+---@text
+---
+if vim.g.quarrel.keymaps then
+        vim.keymap.set("n", "<leader>a", function()
+                vim.cmd("$argadd")
+                vim.cmd.argdedup()
+        end, { desc = "Add current file to arglist" })
+        vim.keymap.set("n", "<leader>h", function() vim.cmd.argument({ count = 1 }) end, { desc = "Arg file 1" })
+        vim.keymap.set("n", "<leader>j", function() vim.cmd.argument({ count = 2 }) end, { desc = "Arg file 2" })
+        vim.keymap.set("n", "<leader>k", function() vim.cmd.argument({ count = 3 }) end, { desc = "Arg file 3" })
+        vim.keymap.set("n", "<leader>l", function() vim.cmd.argument({ count = 4 }) end, { desc = "Arg file 4" })
+end
+
+-- }}}
+
+-- Autocommands {{{
+
+local augroup = vim.api.nvim_create_augroup("Quarrel", { clear = true })
+
+vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
+        desc = "Load arglist",
+        group = augroup,
+        callback = function()
+                require("quarrel").launch_args()
+                require("quarrel").argread()
+        end,
+})
+
+vim.api.nvim_create_autocmd({ "DirChangedPre", "VimLeavePre" }, {
+        desc = "Save arglist",
+        group = augroup,
+        callback = function() require("quarrel").argwrite() end,
+})
+
+vim.api.nvim_create_autocmd({ "QuitPre" }, {
+        desc = "Ignore arglist error E173",
+        group = augroup,
+        callback = function()
+                vim.schedule(function()
+                        if not vim.v.errmsg:match("E173:") then return end
+                        vim.api.nvim_set_hl(0, "ErrorMsg", { fg = "bg", bg = "bg" })
+                        vim.cmd("noau qall")
+                end)
+        end,
+})
+
+-- }}}

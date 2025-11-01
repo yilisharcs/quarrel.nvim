@@ -1,0 +1,42 @@
+*quarrel.nvim.txt*                   Automagically manage project-local arglists
+
+Apache License 2.0 Copyright (c) 2025 yilisharcs
+
+------------------------------------------------------------------------------
+                              Table of Contents
+
+  INTRODUCTION ............................................... |Quarrel-intro|
+  CONFIGURATION ...................................... |Quarrel-configuration|
+------------------------------------------------------------------------------
+                                                                 *Quarrel-intro*
+
+*quarrel.nvim* intends to fix a persistent issue in file navigation: alternate
+buffers can't cope with multiple files and global marks don't remember cursor
+position. This plugin leverages the built-in arglist to automatically manage
+these multiple files. Whenever you change directories, it'll save the arglist
+of the previous directory and load the next one's.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                         *Quarrel-configuration*
+                                   `DEFAULTS`
+Class ~
+{quarrel.Config}
+
+Fields ~
+{database} `(string)` Path to the database file where arglists are stored.
+    Default: `vim.fn.stdpath("data") .. "/quarrel/arglists.msgpack"`
+{keymaps} `(boolean)` If `true`, enables default keymaps for navigating the
+    arglist. See |Quarrel-keymaps|.
+    Default: `false`
+
+Usage ~
+`vim.g.quarrel = { keymaps = true }`
+
+------------------------------------------------------------------------------
+                                                               *Quarrel-keymaps*
+
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
