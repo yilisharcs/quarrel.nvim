@@ -39,10 +39,10 @@ dependencies = {
 test_dependencies = {}
 
 build = {
-        type = "builtin",
-        copy_directories = {
-                "doc",
-                "ftplugin",
-                "plugin",
+        type = "make",
+        build_pass = false,
+        install_variables = {
+                INST_PREFIX = "$(PREFIX)",
+                INST_LUADIR = "$(LUADIR)",
         },
 }
