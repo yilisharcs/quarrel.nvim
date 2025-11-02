@@ -1,6 +1,6 @@
 # quarrel.nvim
 
-Maintain a project-local list of special files to access with ease.
+Automagically manage project-local arglists.
 
 ## Installation
 
