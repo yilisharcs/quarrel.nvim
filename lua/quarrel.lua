@@ -23,15 +23,16 @@ local M = {}
 function M._get_arglist_database()
         local argtable = {}
         local file, err = io.open(vim.g.quarrel.database, "r")
-        if not file then return argtable, err end
-
-        local msgpack = file:read("*a")
-        file:close()
-        if not msgpack then
-                err = "Database is empty."
-                return argtable, err
-        end
-        if #msgpack ~= 0 then argtable = vim.mpack.decode(msgpack) end
+        repeat
+                if not file then break end
+                local msgpack = file:read("*a")
+                file:close()
+                if not msgpack then
+                        err = "Database is empty."
+                        break
+                end
+                if #msgpack ~= 0 then argtable = vim.mpack.decode(msgpack) end
+        until true
         return argtable, err
 end
 
