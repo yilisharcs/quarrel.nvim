@@ -20,7 +20,7 @@ local M = {}
 ---@return table arglist Arglist database.
 ---@return string|nil error Any errors.
 ---@private
-local function get_arglist_database()
+function M._get_arglist_database()
         local argtable = {}
         local file, err = io.open(vim.g.quarrel.database, "r")
         if not file then return argtable, err end
@@ -37,7 +37,7 @@ end
 
 function M.argread()
         vim.cmd("silent! %argdelete")
-        local arglist, err = get_arglist_database()
+        local arglist, err = M._get_arglist_database()
         if err then
                 vim.notify(err, vim.log.levels.ERROR, { title = "quarrel" })
                 return
@@ -51,7 +51,7 @@ function M.argread()
 end
 
 function M.argwrite()
-        local arglist, err = get_arglist_database()
+        local arglist, err = M._get_arglist_database()
         if err then
                 vim.notify(err, vim.log.levels.ERROR, { title = "quarrel" })
                 return
