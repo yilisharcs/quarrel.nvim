@@ -66,13 +66,20 @@ function M.argwrite()
         end
 
         local argv = vim.fn.argv()
-        local cwd = vim.uv.cwd()
-        local data = { [cwd] = argv }
-        for k, v in pairs(data) do
-                arglist[k] = v
+        if argv and #argv > 0 then
+                local cwd = vim.uv.cwd()
+                local data = { [cwd] = argv }
+                for k, v in pairs(data) do
+                        arglist[k] = v
+                end
         end
-        local msgpack = vim.mpack.encode(arglist)
 
+        -- Clean up paths with no arglists if any shows up
+        for k, v in pairs(arglist) do
+                if #v == 0 then arglist[k] = nil end
+        end
+
+        local msgpack = vim.mpack.encode(arglist)
         file:write(msgpack)
         file:close()
 end
