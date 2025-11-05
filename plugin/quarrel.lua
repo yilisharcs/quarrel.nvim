@@ -33,10 +33,12 @@ if vim.g.quarrel.keymaps then
                 vim.cmd("$argadd")
                 vim.cmd.argdedup()
         end, { desc = "Add current file to arglist" })
+        -- stylua: ignore start
         vim.keymap.set("n", "<leader>h", function() vim.cmd.argument({ count = 1 }) end, { desc = "Arg file 1" })
         vim.keymap.set("n", "<leader>j", function() vim.cmd.argument({ count = 2 }) end, { desc = "Arg file 2" })
         vim.keymap.set("n", "<leader>k", function() vim.cmd.argument({ count = 3 }) end, { desc = "Arg file 3" })
         vim.keymap.set("n", "<leader>l", function() vim.cmd.argument({ count = 4 }) end, { desc = "Arg file 4" })
+        -- stylua: ignore end
 end
 
 -- }}}
@@ -66,7 +68,11 @@ vim.api.nvim_create_autocmd({ "QuitPre" }, {
         callback = function()
                 vim.schedule(function()
                         if not vim.v.errmsg:match("E173:") then return end
-                        vim.api.nvim_set_hl(0, "ErrorMsg", { fg = "bg", bg = "bg" })
+                        vim.api.nvim_set_hl(
+                                0,
+                                "ErrorMsg",
+                                { fg = "bg", bg = "bg" }
+                        )
                         vim.cmd("noau qall")
                 end)
         end,

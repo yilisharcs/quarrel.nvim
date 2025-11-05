@@ -24,7 +24,10 @@ these multiple files. Whenever you change directories, it'll save the arglist
 of the previous directory and load the next one's.]],
         license = "Apache-2.0",
         homepage = ("https://github.com/%s/%s"):format(namespace, repository),
-        issues_url = ("https://github.com/%s/%s/issues"):format(namespace, repository),
+        issues_url = ("https://github.com/%s/%s/issues"):format(
+                namespace,
+                repository
+        ),
         maintainer = "yilisharcs <yilisharcs@gmail.com>",
         labels = {
                 "neovim",
