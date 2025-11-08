@@ -23,8 +23,6 @@ local DEFAULTS = {
 
 vim.g.quarrel = vim.tbl_deep_extend("force", DEFAULTS, vim.g.quarrel or {})
 
--- Keymaps {{{
-
 ---@tag Quarrel-keymaps
 ---@text
 ---
@@ -40,10 +38,6 @@ if vim.g.quarrel.keymaps then
         vim.keymap.set("n", "<leader>l", function() vim.cmd.argument({ count = 4 }) end, { desc = "Arg file 4" })
         -- stylua: ignore end
 end
-
--- }}}
-
--- Autocommands {{{
 
 local augroup = vim.api.nvim_create_augroup("Quarrel", { clear = true })
 
@@ -77,5 +71,3 @@ vim.api.nvim_create_autocmd({ "QuitPre" }, {
                 end)
         end,
 })
-
--- }}}

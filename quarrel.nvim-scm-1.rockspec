@@ -8,8 +8,6 @@ local _MODREV, _SPECREV = "scm", "-1"
 version = _MODREV .. _SPECREV
 rockspec_format = "3.0"
 
-version = "scm-1"
-
 source = {
         url = ("git+https://github.com/%s/%s"):format(namespace, repository),
         tag = "HEAD",
