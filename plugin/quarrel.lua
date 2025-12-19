@@ -4,8 +4,7 @@ vim.g.loaded_quarrel = 1
 local qpath = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel")
 if vim.fn.isdirectory(qpath) == 0 then vim.fn.mkdir(qpath) end
 
-local db = vim.fs.joinpath(qpath, "arglists.msgpack")
-if not vim.uv.fs_stat(qpath) then vim.fn.writefile({}, db) end
+local database = vim.fs.joinpath(qpath, "arglists.msgpack")
 
 ---@toc_entry CONFIGURATION
 ---@tag Quarrel-configuration
@@ -25,7 +24,7 @@ if not vim.uv.fs_stat(qpath) then vim.fn.writefile({}, db) end
 ---     }
 --- <
 local DEFAULTS = {
-        database = db,
+        database = database,
         keymaps = false,
 }
 
@@ -50,19 +49,22 @@ end
 
 local augroup = vim.api.nvim_create_augroup("Quarrel", { clear = true })
 
-vim.api.nvim_create_autocmd({ "DirChanged", "VimEnter" }, {
+vim.api.nvim_create_autocmd({ "VimEnter" }, {
+        desc = "Setup arglist on enter",
+        group = augroup,
+        callback = function() require("quarrel").on_enter() end,
+})
+
+vim.api.nvim_create_autocmd({ "DirChanged" }, {
         desc = "Load arglist",
         group = augroup,
-        callback = function()
-                require("quarrel").launch_args()
-                require("quarrel").argread()
-        end,
+        callback = function() require("quarrel").load() end,
 })
 
 vim.api.nvim_create_autocmd({ "DirChangedPre", "VimLeavePre" }, {
         desc = "Save arglist",
         group = augroup,
-        callback = function() require("quarrel").argwrite() end,
+        callback = function() require("quarrel").save() end,
 })
 
 vim.api.nvim_create_autocmd({ "QuitPre" }, {
@@ -71,11 +73,8 @@ vim.api.nvim_create_autocmd({ "QuitPre" }, {
         callback = function()
                 vim.schedule(function()
                         if not vim.v.errmsg:match("E173:") then return end
-                        vim.api.nvim_set_hl(
-                                0,
-                                "ErrorMsg",
-                                { fg = "bg", bg = "bg" }
-                        )
+                        -- stylua: ignore
+                        vim.api.nvim_set_hl(0, "ErrorMsg", { fg = "bg", bg = "bg" })
                         vim.cmd("noau qall")
                 end)
         end,

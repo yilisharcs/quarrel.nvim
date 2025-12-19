@@ -1,5 +1,5 @@
 ---
-status: OPEN
+status: CLOSED
 priority: 100
 tags: [bug]
 ---
@@ -13,3 +13,6 @@ stack traceback:
 	...s/.config/nvim/pack/dev/opt/quarrel.nvim/lua/quarrel.lua:34: in function '_get_arglist_database'
 	...s/.config/nvim/pack/dev/opt/quarrel.nvim/lua/quarrel.lua:41: in function 'argread'
 	...ts/github.com/yilisharcs/quarrel.nvim/plugin/quarrel.lua:50: in function <...ts/github.com/yilisharcs/quarrel.nvim/plugin/quarrel.lua:48>
+
+
+The fix appears to be to un-overengineer the code that saves and loads the arglist, making the process atomic.
