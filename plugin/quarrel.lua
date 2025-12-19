@@ -36,6 +36,7 @@ if vim.g.quarrel.keymaps then
         vim.keymap.set("n", "<leader>j", function() vim.cmd.argument({ count = 2 }) end, { desc = "Arg file 2" })
         vim.keymap.set("n", "<leader>k", function() vim.cmd.argument({ count = 3 }) end, { desc = "Arg file 3" })
         vim.keymap.set("n", "<leader>l", function() vim.cmd.argument({ count = 4 }) end, { desc = "Arg file 4" })
+        vim.keymap.set("n", "<leader>;", function() vim.cmd.argument({ count = 5 }) end, { desc = "Arg file 5" })
         -- stylua: ignore end
 end
 
