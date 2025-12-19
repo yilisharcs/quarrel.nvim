@@ -39,19 +39,15 @@ vim.api.nvim_create_user_command(
 ---@tag Quarrel-keymaps
 ---@text
 ---
+-- stylua: ignore
 if vim.g.quarrel.keymaps then
-        vim.keymap.set("n", "<leader>a", function()
-                vim.cmd("$argadd")
-                vim.cmd.argdedup()
-        end, { desc = "Add current file to arglist" })
-        -- stylua: ignore start
+        vim.keymap.set("n", "<leader>a", function() vim.cmd("$argadd | argdedup") end, { desc = "Add current file to arglist" })
         vim.keymap.set("n", "<leader>e", function() require("quarrel").edit() end, { desc = "Edit the arglist" })
         vim.keymap.set("n", "<leader>h", function() vim.cmd.argument({ count = 1 }) end, { desc = "Arg file 1" })
         vim.keymap.set("n", "<leader>j", function() vim.cmd.argument({ count = 2 }) end, { desc = "Arg file 2" })
         vim.keymap.set("n", "<leader>k", function() vim.cmd.argument({ count = 3 }) end, { desc = "Arg file 3" })
         vim.keymap.set("n", "<leader>l", function() vim.cmd.argument({ count = 4 }) end, { desc = "Arg file 4" })
         vim.keymap.set("n", "<leader>;", function() vim.cmd.argument({ count = 5 }) end, { desc = "Arg file 5" })
-        -- stylua: ignore end
 end
 
 local augroup = vim.api.nvim_create_augroup("Quarrel", { clear = true })
