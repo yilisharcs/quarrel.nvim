@@ -11,11 +11,17 @@ if not vim.uv.fs_stat(qpath) then vim.fn.writefile({}, db) end
 ---
 ---@field database string Path to the database file where arglists are stored.
 ---     Default: `vim.fn.stdpath("data") .. "/quarrel/arglists.msgpack"`
+---
 ---@field keymaps boolean If `true`, enables default keymaps for navigating the
 ---     arglist. See |Quarrel-keymaps|.
 ---     Default: `false`
 ---
----@usage `vim.g.quarrel = { keymaps = true }`
+---@usage >lua
+---     vim.g.quarrel = {
+---             database = vim.env.HOME .. "/Documents",
+---             keymaps = true,
+---     }
+--- <
 local DEFAULTS = {
         database = db,
         keymaps = false,
