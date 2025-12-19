@@ -2,6 +2,8 @@ if vim.g.loaded_quarrel == 1 then return end
 vim.g.loaded_quarrel = 1
 
 local qpath = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel")
+if vim.fn.isdirectory(qpath) == 0 then vim.fn.mkdir(qpath) end
+
 local db = vim.fs.joinpath(qpath, "arglists.msgpack")
 if not vim.uv.fs_stat(qpath) then vim.fn.writefile({}, db) end
 
