@@ -30,6 +30,12 @@ local DEFAULTS = {
 
 vim.g.quarrel = vim.tbl_deep_extend("force", DEFAULTS, vim.g.quarrel or {})
 
+vim.api.nvim_create_user_command(
+        "Quarrel",
+        function() require("quarrel").edit() end,
+        { desc = "Edit the arglist" }
+)
+
 ---@tag Quarrel-keymaps
 ---@text
 ---
@@ -39,6 +45,7 @@ if vim.g.quarrel.keymaps then
                 vim.cmd.argdedup()
         end, { desc = "Add current file to arglist" })
         -- stylua: ignore start
+        vim.keymap.set("n", "<leader>e", function() require("quarrel").edit() end, { desc = "Edit the arglist" })
         vim.keymap.set("n", "<leader>h", function() vim.cmd.argument({ count = 1 }) end, { desc = "Arg file 1" })
         vim.keymap.set("n", "<leader>j", function() vim.cmd.argument({ count = 2 }) end, { desc = "Arg file 2" })
         vim.keymap.set("n", "<leader>k", function() vim.cmd.argument({ count = 3 }) end, { desc = "Arg file 3" })

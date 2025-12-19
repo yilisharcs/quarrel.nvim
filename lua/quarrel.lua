@@ -84,4 +84,63 @@ function M.on_enter()
         end
 end
 
+function M.edit()
+        local bufname = "quarrel://" .. vim.fn.getcwd()
+        local existing = vim.fn.bufnr(bufname)
+        if vim.api.nvim_buf_is_valid(existing) then
+                local wins = vim.fn.win_findbuf(existing)
+                if #wins > 0 then
+                        vim.api.nvim_set_current_win(wins[1])
+                        return
+                end
+                vim.api.nvim_buf_delete(existing, { force = true })
+        end
+
+        local buf = vim.api.nvim_create_buf(false, true)
+
+        vim.api.nvim_buf_set_name(buf, bufname)
+        vim.api.nvim_set_option_value("filetype", "gitignore", { buf = buf }) -- highlighting
+        vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
+        vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+
+        ---@diagnostic disable-next-line: param-type-mismatch
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.fn.argv())
+        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+
+        vim.api.nvim_create_autocmd("BufWriteCmd", {
+                buffer = buf,
+                callback = function()
+                        -- stylua: ignore
+                        local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+
+                        local args = {}
+                        for _, line in ipairs(lines) do
+                                local trim = vim.trim(line)
+                                if trim ~= "" then table.insert(args, trim) end
+                        end
+
+                        vim.cmd("silent! %argdelete")
+                        local str = {}
+                        for _, arg in ipairs(args) do
+                                table.insert(str, vim.fn.fnameescape(arg))
+                        end
+                        vim.cmd.argadd(table.concat(str, " "))
+
+                        M.save()
+
+                        -- stylua: ignore start
+                        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+                        vim.notify("Arglist updated", vim.log.levels.INFO, { title = "Quarrel" })
+                        -- stylua: ignore end
+                end,
+        })
+
+        vim.cmd.new()
+        vim.api.nvim_set_current_buf(buf)
+
+        local win = vim.api.nvim_get_current_win()
+        vim.api.nvim_set_option_value("number", true, { win = win })
+        vim.api.nvim_set_option_value("relativenumber", false, { win = win })
+end
+
 return M

@@ -8,9 +8,7 @@ Using Neovim's built-in package manager:
 
 ```lua
 vim.pack.add({
-    {
-        src = "https://github.com/yilisharcs/quarrel.nvim",
-    },
+    "https://github.com/yilisharcs/quarrel.nvim",
 })
 ```
 
@@ -31,8 +29,8 @@ vim.g.quarrel = {
     -- Where all arg data is stored.
     database = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel/arglists.msgpack"),
 
-    -- Five opt-in keymaps I believe make for a good workflow.
-    -- See for yourself: ./plugin/quarrel.lua:26
+    -- Seven opt-in keymaps I believe make for a good workflow.
+    -- See for yourself: ./plugin/quarrel.lua:43
     keymaps = false,
 }
 ```
@@ -55,7 +53,7 @@ of the previous directory and load the next one's.
 
 Important to note that this plugin does not:
 - Change directories automatically. Use [mini.misc](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-misc.md) with `setup_auto_root()`.
-- Provide a UI to modify the arglist. Use [fzf-lua](https://github.com/ibhagwan/fzf-lua) with `:FzfLua args`.
+- Provide a way to jump to an arg file. Use [fzf-lua](https://github.com/ibhagwan/fzf-lua) with `:FzfLua args` or aforementioned keybindings.
 
 > [!NOTE]
 >
