@@ -30,6 +30,11 @@ local DEFAULTS = {
 
 vim.g.quarrel = vim.tbl_deep_extend("force", DEFAULTS, vim.g.quarrel or {})
 
+---@toc_entry COMMANDS
+---@tag Quarrel-commands
+---@text
+--- `:Quarrel`
+---     Opens a special buffer to edit the current arglist.
 vim.api.nvim_create_user_command(
         "Quarrel",
         function() require("quarrel").edit() end,
@@ -38,6 +43,14 @@ vim.api.nvim_create_user_command(
 
 ---@tag Quarrel-keymaps
 ---@text
+--- When `config.keymaps` is `true`, these default keymaps are enabled:
+--- - `<leader>a` : Add current file to the arglist.
+--- - `<leader>e` : Open the arglist editor (:Quarrel).
+--- - `<leader>h` : Go to argument 1.
+--- - `<leader>j` : Go to argument 2.
+--- - `<leader>k` : Go to argument 3.
+--- - `<leader>l` : Go to argument 4.
+--- - `<leader>;` : Go to argument 5.
 ---
 -- stylua: ignore
 if vim.g.quarrel.keymaps then

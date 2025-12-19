@@ -7,6 +7,7 @@ Apache License 2.0 Copyright (c) 2025 yilisharcs
 
   INTRODUCTION ............................................... |Quarrel-intro|
   CONFIGURATION ...................................... |Quarrel-configuration|
+  COMMANDS ................................................ |Quarrel-commands|
 ------------------------------------------------------------------------------
                                                                  *Quarrel-intro*
 
@@ -40,8 +41,22 @@ Usage ~
     }
 <
 ------------------------------------------------------------------------------
+                                                              *Quarrel-commands*
+
+`:Quarrel`
+    Opens a special buffer to edit the current arglist.
+
+------------------------------------------------------------------------------
                                                                *Quarrel-keymaps*
 
+When `config.keymaps` is `true`, these default keymaps are enabled:
+- `<leader>a` : Add current file to the arglist.
+- `<leader>e` : Open the arglist editor (:Quarrel).
+- `<leader>h` : Go to argument 1.
+- `<leader>j` : Go to argument 2.
+- `<leader>k` : Go to argument 3.
+- `<leader>l` : Go to argument 4.
+- `<leader>;` : Go to argument 5.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

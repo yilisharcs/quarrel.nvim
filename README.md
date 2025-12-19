@@ -30,7 +30,7 @@ vim.g.quarrel = {
     database = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel/arglists.msgpack"),
 
     -- Seven opt-in keymaps I believe make for a good workflow.
-    -- See for yourself: ./plugin/quarrel.lua:43
+    -- See for yourself: ./plugin/quarrel.lua:44
     keymaps = false,
 }
 ```
