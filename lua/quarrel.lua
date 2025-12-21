@@ -130,7 +130,6 @@ function M.edit()
 
                         -- stylua: ignore start
                         vim.api.nvim_set_option_value("modified", false, { buf = buf })
-                        vim.notify("Arglist updated", vim.log.levels.INFO, { title = "Quarrel" })
                         -- stylua: ignore end
                 end,
         })
