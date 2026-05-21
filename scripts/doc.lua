@@ -1,4 +1,4 @@
-package.path = "./vendor/?.lua;./vendor/?/init.lua;" .. package.path
+package.path = "./vendor/mini.doc/lua/?.lua;" .. package.path
 
 local minidoc = require("mini.doc")
 minidoc.setup()
