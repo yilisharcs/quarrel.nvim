@@ -27,7 +27,7 @@ Below are the available options and their default values:
 ```lua
 vim.g.quarrel = {
     -- Where all arg data is stored.
-    database = vim.fs.joinpath(vim.fn.stdpath("data"), "quarrel/arglists.msgpack"),
+    database = `"$XDG_DATA_HOME/nvim/quarrel/quarrel.msgpack"`
 
     -- Seven opt-in keymaps I believe make for a good workflow.
     -- See for yourself: ./plugin/quarrel.lua:44

@@ -1,14 +1,15 @@
 *quarrel.nvim.txt*                   Automagically manage project-local arglists
 
-Apache License 2.0 Copyright (c) 2025 yilisharcs
+Apache License 2.0 Copyright (c) 2025-2026 yilisharcs
 
 ------------------------------------------------------------------------------
                               Table of Contents
 
-  INTRODUCTION ............................................... |Quarrel-intro|
+  INTRODUCTION ..................................................... |Quarrel|
   CONFIGURATION ...................................... |Quarrel-configuration|
   COMMANDS ................................................ |Quarrel-commands|
 ------------------------------------------------------------------------------
+                                                                       *Quarrel*
                                                                  *Quarrel-intro*
 
 *quarrel.nvim* intends to fix a persistent issue in file navigation: alternate
@@ -17,46 +18,86 @@ position. This plugin leverages the built-in arglist to automatically manage
 these multiple files. Whenever you change directories, it'll save the arglist
 of the previous directory and load the next one's.
 
+# Setup ~
 
-==============================================================================
+This plugin works out of the box via 'runtimepath'. It can be configured with
+`vim.g.quarrel` in `init.lua`, and provides a global Lua table for scripting. You
+can call `require("quarrel").setup()` to refresh all internal side-effects.
+
+See |Quarrel-configuration| for `config` structure and default values.
+
+# Disabling ~
+
+To disable core functionality, set `vim.g.quarrel_disable` (globally) to `true`.
+
+------------------------------------------------------------------------------
+                                                               *Quarrel.setup()*
+                           `Quarrel.setup`({config})
+Module setup.
+
+@param config quarrel.Config|nil Optional overrides.
+
 ------------------------------------------------------------------------------
                                                          *Quarrel-configuration*
-                                   `DEFAULTS`
+                                `Quarrel.config`
 Class ~
 {quarrel.Config}
 
 Fields ~
 {database} `(string)` Path to the database file where arglists are stored.
-    Default: `vim.fn.stdpath("data") .. "/quarrel/arglists.msgpack"`
+    Default: `"$XDG_DATA_HOME/nvim/quarrel/quarrel.msgpack"`
 
-{keymaps} `(boolean)` If `true`, enables default keymaps for navigating the
-    arglist. See |Quarrel-keymaps|.
-    Default: `false`
+{mappings} `(table)` Module mappings. Use `''` (empty string) to disable one.
+
+{mappings.add} `(string)` Add current file to arglist.
+    Default: `"<leader>a"`
+
+{mappings.edit} `(string)` Edit the arglist.
+    Default: `"<leader>e"`
+
+{mappings.arg1} `(string)` Go to arg file 1. Default: `"<leader>h"`
+{mappings.arg2} `(string)` Go to arg file 2. Default: `"<leader>j"`
+{mappings.arg3} `(string)` Go to arg file 3. Default: `"<leader>k"`
+{mappings.arg4} `(string)` Go to arg file 4. Default: `"<leader>l"`
+{mappings.arg5} `(string)` Go to arg file 5. Default: `"<leader>;"`
 
 Usage ~
 >lua
     vim.g.quarrel = {
-            database = vim.env.HOME .. "/Documents",
-            keymaps = true,
+            database = `vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack")`,
+            mappings = {
+                    add = "<leader>qa",
+                    edit = "<leader>qe",
+            },
     }
 <
 ------------------------------------------------------------------------------
+                                                                *Quarrel.save()*
+                            `Quarrel.save`({config})
+Save current arglist to database.
+
+@param config quarrel.Config|nil Optional overrides.
+
+------------------------------------------------------------------------------
+                                                                *Quarrel.load()*
+                            `Quarrel.load`({config})
+Load project-local arglist from database.
+
+@param config quarrel.Config|nil Optional overrides.
+
+------------------------------------------------------------------------------
+                                                                *Quarrel.edit()*
+                            `Quarrel.edit`({config})
+Open arglist editor.
+
+@param config quarrel.Config|nil Optional overrides.
+
+------------------------------------------------------------------------------
                                                               *Quarrel-commands*
+
 
 `:Quarrel`
     Opens a special buffer to edit the current arglist.
-
-------------------------------------------------------------------------------
-                                                               *Quarrel-keymaps*
-
-When `config.keymaps` is `true`, these default keymaps are enabled:
-- `<leader>a` : Add current file to the arglist.
-- `<leader>e` : Open the arglist editor (:Quarrel).
-- `<leader>h` : Go to argument 1.
-- `<leader>j` : Go to argument 2.
-- `<leader>k` : Go to argument 3.
-- `<leader>l` : Go to argument 4.
-- `<leader>;` : Go to argument 5.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
