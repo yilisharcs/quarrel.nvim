@@ -135,9 +135,7 @@ function Quarrel.load(config)
         local arglist = db[cwd]
         if not arglist or #arglist == 0 then return end
 
-        vim.iter(arglist)
-                :map(H.is_eligible)
-                :each(function(path) vim.cmd("$argadd " .. vim.fn.fnameescape(path)) end)
+        vim.iter(arglist):map(H.is_eligible):each(H.argadd)
 end
 
 --- Open arglist editor.
@@ -184,11 +182,7 @@ function Quarrel.edit(config)
 
                         -- always clear the list
                         vim.cmd("%argdelete")
-                        if #arglist > 0 then
-                                for _, path in ipairs(arglist) do
-                                        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
-                                end
-                        end
+                        vim.iter(arglist):each(H.argadd)
                         Quarrel.save()
 
                         vim.api.nvim_set_option_value("modified", false, { buf = buf })
@@ -309,7 +303,11 @@ H.create_mappings = function(config)
         end
 
         map(m.add, function()
-                if H.is_eligible(vim.fn.expand("%:p")) then vim.cmd("$argadd | argdedup") end
+                local file = H.is_eligible(vim.fn.expand("%:p"))
+                if file then
+                        H.argadd(file)
+                        vim.cmd("argdedup")
+                end
         end, "Add current file to the arglist")
         -- stylua: ignore start
         map(m.edit, function() Quarrel.edit() end, "Open the arglist editor")
@@ -374,9 +372,7 @@ H.init_arglist = function()
 
         -- always clear the list
         vim.cmd("%argdelete")
-        for _, path in ipairs(argf_no_dir) do
-                vim.cmd("$argadd " .. vim.fn.fnameescape(path))
-        end
+        vim.iter(argf_no_dir):each(H.argadd)
 end
 
 ---@private
@@ -409,6 +405,12 @@ H.is_eligible = function(path)
 
         return abspath
 end
+
+---@private
+--- Add a path to the end of the arglist with proper escaping.
+---
+--- @param path string Absolute path to add.
+H.argadd = function(path) vim.cmd("$argadd " .. vim.fn.fnameescape(path)) end
 
 return Quarrel
 
