@@ -405,6 +405,21 @@ H.is_eligible = function(path)
         local abspath = vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
         if vim.fn.isdirectory(abspath) == 1 then return nil end
 
+        -- stylua: ignore
+        local roots = vim.iter({
+                vim.env.TMPDIR,
+                "/tmp/",
+                "/var/tmp/"
+        })
+                -- discard $TMPDIR if unset
+                :filter(function(it) return it and it ~= "" end)
+                :map(function(it) return vim.fs.normalize(vim.fn.fnamemodify(it, ":p")) end)
+                :totable()
+
+        if vim.iter(roots):any(function(it) return vim.startswith(abspath, it) end) then
+                return nil
+        end
+
         return abspath
 end
 
