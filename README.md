@@ -27,11 +27,18 @@ Below are the available options and their default values:
 ```lua
 vim.g.quarrel = {
     -- Where all arg data is stored.
-    database = `"$XDG_DATA_HOME/nvim/quarrel/quarrel.msgpack"`
+    database = "$XDG_DATA_HOME/nvim/quarrel/quarrel.msgpack",
 
-    -- Seven opt-in keymaps I believe make for a good workflow.
-    -- See for yourself: ./plugin/quarrel.lua:44
-    keymaps = false,
+    -- Default keymaps. Use '' to disable.
+    mappings = {
+        add  = "<leader>a",
+        edit = "<leader>e",
+        arg1 = "<leader>h",
+        arg2 = "<leader>j",
+        arg3 = "<leader>k",
+        arg4 = "<leader>l",
+        arg5 = "<leader>;",
+    },
 }
 ```
 
@@ -49,11 +56,12 @@ of the previous directory and load the next one's.
 >
 > - Edit the previous or next arglist files with `[a` and `a]`
 > - Jump to the first or last arglist files with `[A` and `A]`
+> - Jump to a specific index with `:[count]argument`
 > - Operate on the arglist with `:argdo`
 
 Important to note that this plugin does not:
 - Change directories automatically. Use [mini.misc](https://github.com/nvim-mini/mini.nvim/blob/main/readmes/mini-misc.md) with `setup_auto_root()`.
-- Provide a way to jump to an arg file. Use [fzf-lua](https://github.com/ibhagwan/fzf-lua) with `:FzfLua args` or aforementioned keybindings.
+- Provide a picker for large arglists. Use [fzf-lua](https://github.com/ibhagwan/fzf-lua) with `:FzfLua args` for lists exceeding the default mappings.
 
 > [!NOTE]
 >
@@ -67,7 +75,7 @@ Harpoon: <https://github.com/ThePrimeagen/harpoon>
 
 ## License
 
-Copyright 2025 yilisharcs <yilisharcs@gmail.com>
+Copyright 2025-2026 yilisharcs <yilisharcs@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
