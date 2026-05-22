@@ -110,8 +110,8 @@ function Quarrel.save(config)
         local raw_argv = vim.fn.argv()
         ---@cast raw_argv string[]
         for _, path in ipairs(raw_argv) do
-                local file = vim.fn.fnamemodify(path, ":p")
-                if vim.fn.isdirectory(file) == 0 then table.insert(normalized, file) end
+                local file = H.is_eligible(path)
+                if file then table.insert(normalized, file) end
         end
 
         local db = H.read_db(active_config.database)
@@ -142,9 +142,8 @@ function Quarrel.load(config)
         if not arglist or #arglist == 0 then return end
 
         for _, path in ipairs(arglist) do
-                if vim.fn.isdirectory(path) == 0 then
-                        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
-                end
+                local file = H.is_eligible(path)
+                if file then vim.cmd("$argadd " .. vim.fn.fnameescape(file)) end
         end
 end
 
@@ -188,11 +187,8 @@ function Quarrel.edit(config)
 
                         local arglist = {}
                         for _, line in ipairs(lines) do
-                                local file = vim.trim(line)
-                                if file ~= "" and vim.fn.isdirectory(file) == 0 then
-                                        local fname = vim.fn.fnameescape(file)
-                                        table.insert(arglist, fname)
-                                end
+                                local file = H.is_eligible(vim.trim(line))
+                                if file then table.insert(arglist, vim.fn.fnameescape(file)) end
                         end
 
                         -- always clear the list
@@ -322,9 +318,7 @@ H.create_mappings = function(config)
         end
 
         map(m.add, function()
-                if vim.fn.isdirectory(vim.fn.expand("%:p")) == 0 then
-                        vim.cmd("$argadd | argdedup")
-                end
+                if H.is_eligible(vim.fn.expand("%:p")) then vim.cmd("$argadd | argdedup") end
         end, "Add current file to the arglist")
         -- stylua: ignore start
         map(m.edit, function() Quarrel.edit() end, "Open the arglist editor")
@@ -382,7 +376,8 @@ end
 H.init_arglist = function()
         local argf_no_dir = {}
         for _, path in ipairs(vim.v.argf) do
-                if vim.fn.isdirectory(path) == 0 then table.insert(argf_no_dir, path) end
+                local file = H.is_eligible(path)
+                if file then table.insert(argf_no_dir, file) end
         end
 
         if #argf_no_dir == 0 then
@@ -395,6 +390,22 @@ H.init_arglist = function()
         for _, path in ipairs(argf_no_dir) do
                 vim.cmd("$argadd " .. vim.fn.fnameescape(path))
         end
+end
+
+---@private
+--- Check if a path is eligible for the arglist.
+---
+--- @param path string Filepath to check.
+---
+--- @return string|nil # The absolute path if eligible, nil otherwise.
+H.is_eligible = function(path)
+        if type(path) ~= "string" or path == "" then return nil end
+
+        -- collapse redundant separators and resolve relative paths
+        local abspath = vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
+        if vim.fn.isdirectory(abspath) == 1 then return nil end
+
+        return abspath
 end
 
 return Quarrel
