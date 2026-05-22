@@ -50,7 +50,7 @@ function Quarrel.setup(config)
         H.apply_config(validated_config)
 
         -- reload arglist on config reload
-        if vim.v.vim_did_enter == 1 and #vim.v.argf == 0 then Quarrel.load() end
+        if vim.v.vim_did_enter == 1 then H.init_arglist() end
 end
 
 ---@toc_entry CONFIGURATION
@@ -110,7 +110,8 @@ function Quarrel.save(config)
         local raw_argv = vim.fn.argv()
         ---@cast raw_argv string[]
         for _, path in ipairs(raw_argv) do
-                table.insert(normalized, vim.fn.fnamemodify(path, ":p"))
+                local file = vim.fn.fnamemodify(path, ":p")
+                if vim.fn.isdirectory(file) == 0 then table.insert(normalized, file) end
         end
 
         local db = H.read_db(active_config.database)
@@ -141,7 +142,9 @@ function Quarrel.load(config)
         if not arglist or #arglist == 0 then return end
 
         for _, path in ipairs(arglist) do
-                vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+                if vim.fn.isdirectory(path) == 0 then
+                        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+                end
         end
 end
 
@@ -186,7 +189,7 @@ function Quarrel.edit(config)
                         local arglist = {}
                         for _, line in ipairs(lines) do
                                 local file = vim.trim(line)
-                                if file ~= "" then
+                                if file ~= "" and vim.fn.isdirectory(file) == 0 then
                                         local fname = vim.fn.fnameescape(file)
                                         table.insert(arglist, fname)
                                 end
@@ -286,9 +289,7 @@ H.create_autocommands = function()
         vim.api.nvim_create_autocmd({ "VimEnter" }, {
                 desc = "Setup arglist on enter",
                 group = group,
-                callback = function()
-                        if #vim.v.argf == 0 then Quarrel.load() end
-                end,
+                callback = function() H.init_arglist() end,
         })
 end
 
@@ -320,8 +321,12 @@ H.create_mappings = function(config)
                 vim.keymap.set("n", lhs, rhs, { desc = desc, silent = true })
         end
 
+        map(m.add, function()
+                if vim.fn.isdirectory(vim.fn.expand("%:p")) == 0 then
+                        vim.cmd("$argadd | argdedup")
+                end
+        end, "Add current file to the arglist")
         -- stylua: ignore start
-        map(m.add, function() vim.cmd("$argadd | argdedup") end, "Add current file to the arglist")
         map(m.edit, function() Quarrel.edit() end, "Open the arglist editor")
         map(m.arg1, function() pcall(vim.cmd.argument, { count = 1 }) end, "Arg file 1")
         map(m.arg2, function() pcall(vim.cmd.argument, { count = 2 }) end, "Arg file 2")
@@ -368,6 +373,28 @@ H.write_db = function(path, data)
         if not fp then return end
         fp:write(packed)
         fp:close()
+end
+
+---@private
+--- Initialize arglist from startup arguments or database.
+---
+--- Filters out any arguments that evaluate to a directory.
+H.init_arglist = function()
+        local argf_no_dir = {}
+        for _, path in ipairs(vim.v.argf) do
+                if vim.fn.isdirectory(path) == 0 then table.insert(argf_no_dir, path) end
+        end
+
+        if #argf_no_dir == 0 then
+                Quarrel.load()
+                return
+        end
+
+        -- always clear the list
+        vim.cmd("%argdelete")
+        for _, path in ipairs(argf_no_dir) do
+                vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+        end
 end
 
 return Quarrel
