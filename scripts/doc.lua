@@ -5,5 +5,4 @@ minidoc.setup()
 
 minidoc.generate({
         "lua/quarrel.lua",
-        "plugin/quarrel.lua",
 }, "doc/quarrel.nvim.txt", {})
