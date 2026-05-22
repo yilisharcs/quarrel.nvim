@@ -106,13 +106,7 @@ function Quarrel.save(config)
         local cwd = vim.uv.cwd()
         if not cwd then return end
 
-        local normalized = {}
-        local raw_argv = vim.fn.argv()
-        ---@cast raw_argv string[]
-        for _, path in ipairs(raw_argv) do
-                local file = H.is_eligible(path)
-                if file then table.insert(normalized, file) end
-        end
+        local normalized = vim.iter(vim.fn.argv()):map(H.is_eligible):totable()
 
         local db = H.read_db(active_config.database)
         if #normalized > 0 then
@@ -141,10 +135,9 @@ function Quarrel.load(config)
         local arglist = db[cwd]
         if not arglist or #arglist == 0 then return end
 
-        for _, path in ipairs(arglist) do
-                local file = H.is_eligible(path)
-                if file then vim.cmd("$argadd " .. vim.fn.fnameescape(file)) end
-        end
+        vim.iter(arglist)
+                :map(H.is_eligible)
+                :each(function(path) vim.cmd("$argadd " .. vim.fn.fnameescape(path)) end)
 end
 
 --- Open arglist editor.
@@ -185,17 +178,15 @@ function Quarrel.edit(config)
                 callback = function()
                         local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
-                        local arglist = {}
-                        for _, line in ipairs(lines) do
-                                local file = H.is_eligible(vim.trim(line))
-                                if file then table.insert(arglist, vim.fn.fnameescape(file)) end
-                        end
+                        local arglist = vim.iter(lines)
+                                :map(function(line) return H.is_eligible(vim.trim(line)) end)
+                                :totable()
 
                         -- always clear the list
                         vim.cmd("%argdelete")
                         if #arglist > 0 then
                                 for _, path in ipairs(arglist) do
-                                        vim.cmd("$argadd " .. path)
+                                        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
                                 end
                         end
                         Quarrel.save()
@@ -374,11 +365,7 @@ end
 ---
 --- Filters out any arguments that evaluate to a directory.
 H.init_arglist = function()
-        local argf_no_dir = {}
-        for _, path in ipairs(vim.v.argf) do
-                local file = H.is_eligible(path)
-                if file then table.insert(argf_no_dir, file) end
-        end
+        local argf_no_dir = vim.iter(vim.v.argf):map(H.is_eligible):totable()
 
         if #argf_no_dir == 0 then
                 Quarrel.load()
