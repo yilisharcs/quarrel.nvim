@@ -187,7 +187,9 @@ function Quarrel.setup(config)
         H.apply_config(validated_config)
 
         -- reload arglist on config reload
-        if vim.v.vim_did_enter == 1 then H.init_arglist() end
+        if vim.v.vim_did_enter == 1 then
+                H.init_arglist()
+        end
 end
 
 ---@toc_entry PLUGIN API
@@ -210,17 +212,23 @@ end
 --- arglist to the session state without touching the disk. Changes are appended to
 --- the history for the current project.
 function Quarrel.write_cache()
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
 
         local cwd = vim.uv.cwd()
-        if not cwd then return end
+        if not cwd then
+                return
+        end
 
         -- no existing history for cwd? create a fallback table
         local history = Quarrel.cache.db.data[cwd] or { index = 0, entries = {} }
         local normalized = vim.iter(vim.fn.argv()):map(H.is_eligible):totable()
 
         -- avoid creating empty histories for empty projects
-        if #normalized == 0 and #history.entries == 0 then return end
+        if #normalized == 0 and #history.entries == 0 then
+                return
+        end
 
         -- in-place edit: overwrite current index, never increment
         if history.index > 0 then
@@ -251,19 +259,27 @@ end
 --- |VimEnter| (on startup) |autocommand|s. Call this manually to sync the active
 --- arglist with the stored state for the current directory.
 function Quarrel.read()
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
 
         local cwd = vim.uv.cwd()
-        if not cwd then return end
+        if not cwd then
+                return
+        end
 
         -- always clear the list
         vim.cmd("%argdelete")
 
         local history = Quarrel.cache.db.data[cwd]
-        if not history or #history.entries == 0 then return end
+        if not history or #history.entries == 0 then
+                return
+        end
 
         local arglist = history.entries[history.index]
-        if not arglist or #arglist == 0 then return end
+        if not arglist or #arglist == 0 then
+                return
+        end
 
         vim.iter(arglist):map(H.is_eligible):each(H.argadd)
         H.notify()
@@ -277,7 +293,9 @@ end
 ---
 ---@param path string? Absolute path to add. Defaults to current file.
 function Quarrel.add(path)
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
         vim.iter({ path or vim.fn.expand("%:p") }):map(H.is_eligible):each(H.argadd)
         vim.cmd.argdedup()
         Quarrel.write_cache()
@@ -291,34 +309,48 @@ end
 ---
 ---@param idx number Arglist index.
 function Quarrel.goto_arg(idx)
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
         pcall(vim.cmd.argument, { count = idx })
 end
 
 --- Navigate to the older arglist in history.
 function Quarrel.older()
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
 
         local cwd = vim.uv.cwd()
         local history = cwd and Quarrel.cache.db.data[cwd]
-        if not history then return end
+        if not history then
+                return
+        end
 
         local prev_index = history.index
         history.index = math.max(1, history.index - 1)
-        if history.index ~= prev_index then Quarrel.read() end
+        if history.index ~= prev_index then
+                Quarrel.read()
+        end
 end
 
 --- Navigate to the newer arglist in history.
 function Quarrel.newer()
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
 
         local cwd = vim.uv.cwd()
         local history = cwd and Quarrel.cache.db.data[cwd]
-        if not history then return end
+        if not history then
+                return
+        end
 
         local prev_index = history.index
         history.index = math.min(#history.entries, history.index + 1)
-        if history.index ~= prev_index then Quarrel.read() end
+        if history.index ~= prev_index then
+                Quarrel.read()
+        end
 end
 
 --- Toggle the arglist editor.
@@ -326,10 +358,14 @@ end
 --- Opens a |special-buffer| with 'filetype' quarrel for the current directory's
 --- arglist. Edits, additions, removals, and shuffles are written to the cache.
 function Quarrel.edit()
-        if H.is_disabled() then return end
+        if H.is_disabled() then
+                return
+        end
 
         local cwd = vim.uv.cwd()
-        if not cwd then return end
+        if not cwd then
+                return
+        end
 
         -- editor toggle
         if H.editor_buf and vim.api.nvim_buf_is_valid(H.editor_buf) then
@@ -360,7 +396,9 @@ function Quarrel.edit()
                         local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
                         local arglist = vim.iter(lines)
-                                :map(function(line) return H.is_eligible(vim.trim(line)) end)
+                                :map(function(line)
+                                        return H.is_eligible(vim.trim(line))
+                                end)
                                 :totable()
 
                         -- always clear the list
@@ -508,12 +546,16 @@ end
 --- Check if module is disabled.
 ---
 ---@return boolean # True if disabled globally.
-H.is_disabled = function() return vim.g.quarrel_disable == true end
+H.is_disabled = function()
+        return vim.g.quarrel_disable == true
+end
 
 ---@private
 --- Report the current arglist status.
 H.notify = function()
-        if not H.get_config().notify then return end
+        if not H.get_config().notify then
+                return
+        end
 
         if H.is_notify_hijacked == nil then
                 local source = debug.getinfo(vim.notify, "S").source
@@ -536,7 +578,9 @@ H.notify = function()
         end
 
         local msg = table.concat(parts, "\n")
-        if H.is_notify_hijacked then msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}" end
+        if H.is_notify_hijacked then
+                msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}"
+        end
 
         vim.notify(msg, vim.log.levels.INFO, {
                 title = "quarrel",
@@ -554,7 +598,9 @@ H.create_autocommands = function()
                 desc = "Write project-local arglist",
                 callback = function(args)
                         Quarrel.write_cache()
-                        if args.event ~= "VimLeavePre" then return end
+                        if args.event ~= "VimLeavePre" then
+                                return
+                        end
                         -- prune any index ahead of the pointer
                         for _, history in pairs(Quarrel.cache.db.data) do
                                 while #history.entries > history.index do
@@ -568,36 +614,34 @@ H.create_autocommands = function()
         vim.api.nvim_create_autocmd("DirChanged", {
                 group = group,
                 desc = "Read project-local arglist",
-                callback = function() Quarrel.read() end,
+                callback = function()
+                        Quarrel.read()
+                end,
         })
 
         vim.api.nvim_create_autocmd({ "VimEnter" }, {
                 desc = "Setup arglist on enter",
                 group = group,
-                callback = function() H.init_arglist() end,
+                callback = function()
+                        H.init_arglist()
+                end,
         })
 end
 
 ---@private
 --- Create module user commands.
 H.create_usercommands = function()
-        vim.api.nvim_create_user_command(
-                "Qedit",
-                function() Quarrel.edit() end,
-                { desc = "Edit the arglist" }
-        )
+        vim.api.nvim_create_user_command("Qedit", function()
+                Quarrel.edit()
+        end, { desc = "Edit the arglist" })
 
-        vim.api.nvim_create_user_command(
-                "Qolder",
-                function() Quarrel.older() end,
-                { desc = "Go to older arglist" }
-        )
+        vim.api.nvim_create_user_command("Qolder", function()
+                Quarrel.older()
+        end, { desc = "Go to older arglist" })
 
-        vim.api.nvim_create_user_command(
-                "Qnewer",
-                function() Quarrel.newer() end,
-                { desc = "Go to newer arglist" }
-        )
+        vim.api.nvim_create_user_command("Qnewer", function()
+                Quarrel.newer()
+        end, { desc = "Go to newer arglist" })
 end
 
 ---@private
@@ -606,20 +650,40 @@ end
 ---@param config quarrel.Config Validated configuration table.
 H.create_mappings = function(config)
         local map = function(lhs, rhs, desc)
-                if lhs == "" then return end
+                if lhs == "" then
+                        return
+                end
                 vim.keymap.set("n", lhs, rhs, { desc = desc, silent = true })
         end
 
         -- define mappings
-        map("<Plug>(QuarrelAdd)", function() Quarrel.add() end, "Add current file to the arglist")
-        map("<Plug>(QuarrelEdit)", function() Quarrel.edit() end, "Open the arglist editor")
-        map("<Plug>(QuarrelOlder)", function() Quarrel.older() end, "Go to older arglist")
-        map("<Plug>(QuarrelNewer)", function() Quarrel.newer() end, "Go to newer arglist")
-        map("<Plug>(QuarrelArg1)", function() Quarrel.goto_arg(1) end, "Arg file 1")
-        map("<Plug>(QuarrelArg2)", function() Quarrel.goto_arg(2) end, "Arg file 2")
-        map("<Plug>(QuarrelArg3)", function() Quarrel.goto_arg(3) end, "Arg file 3")
-        map("<Plug>(QuarrelArg4)", function() Quarrel.goto_arg(4) end, "Arg file 4")
-        map("<Plug>(QuarrelArg5)", function() Quarrel.goto_arg(5) end, "Arg file 5")
+        map("<Plug>(QuarrelAdd)", function()
+                Quarrel.add()
+        end, "Add current file to the arglist")
+        map("<Plug>(QuarrelEdit)", function()
+                Quarrel.edit()
+        end, "Open the arglist editor")
+        map("<Plug>(QuarrelOlder)", function()
+                Quarrel.older()
+        end, "Go to older arglist")
+        map("<Plug>(QuarrelNewer)", function()
+                Quarrel.newer()
+        end, "Go to newer arglist")
+        map("<Plug>(QuarrelArg1)", function()
+                Quarrel.goto_arg(1)
+        end, "Arg file 1")
+        map("<Plug>(QuarrelArg2)", function()
+                Quarrel.goto_arg(2)
+        end, "Arg file 2")
+        map("<Plug>(QuarrelArg3)", function()
+                Quarrel.goto_arg(3)
+        end, "Arg file 3")
+        map("<Plug>(QuarrelArg4)", function()
+                Quarrel.goto_arg(4)
+        end, "Arg file 4")
+        map("<Plug>(QuarrelArg5)", function()
+                Quarrel.goto_arg(5)
+        end, "Arg file 5")
 
         -- apply mappings
         local m = config.mappings
@@ -641,16 +705,22 @@ end
 ---@param data quarrel.Argdata Data to encode and write.
 H.write_db_file = function(path, data)
         local dir = vim.fs.dirname(path)
-        if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
+        if vim.fn.isdirectory(dir) == 0 then
+                vim.fn.mkdir(dir, "p")
+        end
 
         -- NOTE: `vim.mpack.encode` can't serialize functions, userdata, and
         --       coroutines. it's probably not relevant to our usecase but I
         --       believe that it's better to be safe than sorry.
         local ok, packed = pcall(vim.mpack.encode, data)
-        if not ok then return end
+        if not ok then
+                return
+        end
 
         local fp = io.open(path, "wb")
-        if not fp then return end
+        if not fp then
+                return
+        end
         fp:write(packed)
         fp:close()
 end
@@ -670,14 +740,20 @@ H.read_db_file = function(path)
         }
 
         local stat = vim.uv.fs_stat(path)
-        if not stat or stat.type ~= "file" or stat.size == 0 then return db end
+        if not stat or stat.type ~= "file" or stat.size == 0 then
+                return db
+        end
 
         local fp = io.open(path, "rb")
         local content = fp and fp:read("*all") or ""
-        if fp then fp:close() end
+        if fp then
+                fp:close()
+        end
 
         local ok, decoded = pcall(vim.mpack.decode, content)
-        if ok and type(decoded) == "table" and decoded.data then db = decoded end
+        if ok and type(decoded) == "table" and decoded.data then
+                db = decoded
+        end
 
         return db
 end
@@ -695,7 +771,9 @@ H.init_arglist = function()
         end
 
         local cwd = vim.uv.cwd()
-        if not cwd then return end
+        if not cwd then
+                return
+        end
         local history = Quarrel.cache.db.data[cwd] or { index = 0, entries = {} }
 
         -- n+1 rule: only append if different from the current indexed entry
@@ -723,11 +801,15 @@ end
 ---
 ---@return string? # The absolute path if eligible, nil otherwise.
 H.is_eligible = function(path)
-        if type(path) ~= "string" or path == "" then return nil end
+        if type(path) ~= "string" or path == "" then
+                return nil
+        end
 
         -- collapse redundant separators and resolve relative paths
         local abspath = vim.fs.normalize(vim.fs.abspath(path))
-        if vim.fn.isdirectory(abspath) == 1 then return nil end
+        if vim.fn.isdirectory(abspath) == 1 then
+                return nil
+        end
 
         -- stylua: ignore
         local roots = vim.iter({
@@ -740,7 +822,11 @@ H.is_eligible = function(path)
                 :map(function(it) return vim.fs.normalize(vim.fs.abspath(it)) end)
                 :totable()
 
-        if vim.iter(roots):any(function(it) return vim.startswith(abspath, it) end) then
+        if
+                vim.iter(roots):any(function(it)
+                        return vim.startswith(abspath, it)
+                end)
+        then
                 return nil
         end
 
@@ -751,7 +837,9 @@ end
 --- Add a path to the end of the arglist with proper escaping.
 ---
 ---@param path string Absolute path to add.
-H.argadd = function(path) vim.cmd("$argadd " .. vim.fn.fnameescape(path)) end
+H.argadd = function(path)
+        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+end
 
 return Quarrel
 

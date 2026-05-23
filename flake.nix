@@ -19,6 +19,7 @@
         pkgs.lua-language-server
         # formatters
         pkgs.alejandra
+        pkgs.stylua
       ];
     };
 

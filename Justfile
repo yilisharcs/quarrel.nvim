@@ -6,3 +6,6 @@ doc:
 
 repro:
         nvim --clean -u scripts/repro.lua
+
+format:
+        stylua .
