@@ -7,16 +7,67 @@ Apache License 2.0 Copyright (c) 2025-2026 yilisharcs
 
   INTRODUCTION ..................................................... |Quarrel|
   CONFIGURATION ...................................... |Quarrel-configuration|
-  COMMANDS ................................................ |Quarrel-commands|
+  PLUGIN API ................................................... |Quarrel-api|
+  TROUBLESHOOTING .................................. |Quarrel-troubleshooting|
+  SIMILAR PLUGINS .................................. |Quarrel-similar-plugins|
 ------------------------------------------------------------------------------
                                                                        *Quarrel*
                                                                  *Quarrel-intro*
 
 *quarrel.nvim* intends to fix a persistent issue in file navigation: alternate
-buffers can't cope with multiple files and global marks don't remember cursor
-position. This plugin leverages the built-in arglist to automatically manage
-these multiple files. Whenever you change directories, it'll save the arglist
-of the previous directory and load the next one's.
+buffers can't cope with multiple files and global marks are neither unlimited
+nor project-local. This plugin leverages the built-in |arglist| to automatically
+manage these multiple files. Whenever you change directories, it'll save the
+arglist of the previous directory and load the next one's.
+
+# Design ~
+
+ThePrimeagen's Harpoon is what introduced me to the concept of project-local
+marks. After some time -- and a bug that I couldn't track down which prevented
+me from embracing the idea completely -- I decided to simplify my init.lua and
+use global marks instead, and even opened an issue on GitHub with a snippet of
+code that I'd used for a long time, hoping that it would be upstreamed:
+
+`Update global mark position on BufLeave, VimLeavePre`
+    https://github.com/neovim/neovim/issues/36358
+
+I was quickly disabused of the idea that global marks should remember the
+cursor position. They serve a different purpose. I dislike that purpose, but
+it is a purpose nonetheless. I decided then that writing this plugin could be
+a learning experience in leveraging native solutions over custom special files
+and json. Thus, it was born: a minimal wrapper around the |arglist| that stays
+out of the way. It maps a directory path to a list of paths and encodes them
+into msgpack format with |vim.mpack|. This data is held in-memory until you
+exit Nvim (impossible!!), to mean that this plugin does not support multiple
+instances writing to the database; the last writer wins.
+
+This diverged from the original goal. This plugin handles neither remembering
+the cursor position nor automatically changing directories with heuristics; I
+recommend using [|MiniMisc|](https://github.com/nvim-mini/mini.misc) with
+`setup_auto_root()` and `setup_restore_cursor()` enabled for that. This plugin
+does not external track file changes to update the arglist; I recommend using
+[yazi.nvim](https://github.com/mikavilpas/yazi.nvim) for that. This plugin
+also does not provide a picker for the arglist, and will never have one. It
+will remain minimal.
+
+# Commands ~
+
+                                                     *:Qedit*
+:Qedit                  Open a |special-buffer| with 'filetype' quarrel for the
+                        current directory's arglist. Edits, additions,
+                        removals, and shuffles are committed to the cache on
+                        save.
+
+                                                     *:Qolder*
+:Qolder                 Navigate to an older snapshot in history. Clears the
+                        current |arglist| and replaces it with the previous
+                        snapshot. Note that later snapshots will be pruned if
+                        an older arglist is edited.
+
+                                                     *:Qnewer*
+:Qnewer                 Navigate to a newer snapshot in history. Clears the
+                        current |arglist| and replaces it with the next
+                        snapshot.
 
 # Setup ~
 
@@ -26,78 +77,226 @@ can call `require("quarrel").setup()` to refresh all internal side-effects.
 
 See |Quarrel-configuration| for `config` structure and default values.
 
+# Tips ~
+
+Leverage built-in Neovim features to make editing more pleasant:
+- Edit the |:previous| or |:next| arglist files with `[a` and `a]`.
+- |:rewind| to the first or jump to the |:last| arglist files with `[A` and `A]`.
+- Operate on the arglist with |:argdo|.
+
 # Disabling ~
 
 To disable core functionality, set `vim.g.quarrel_disable` (globally) to `true`.
 
 ------------------------------------------------------------------------------
-                                                               *Quarrel.setup()*
-                           `Quarrel.setup`({config})
-Module setup.
-
-@param config quarrel.Config|nil Optional overrides.
-
-------------------------------------------------------------------------------
                                                          *Quarrel-configuration*
+                                                                *Quarrel.config*
                                 `Quarrel.config`
 Class ~
 {quarrel.Config}
 
 Fields ~
 {database} `(string)` Path to the database file where arglists are stored.
-    Default: `"$XDG_DATA_HOME/nvim/quarrel/quarrel.msgpack"`
+    Default: `vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack")`
 
-{mappings} `(table)` Module mappings. Use `''` (empty string) to disable one.
+{hist_level} `(number)` Number of history entries to keep per project.
+    Default: `3`
 
-{mappings.add} `(string)` Add current file to arglist.
+{notify} `(boolean)` Whether to automatically echo the arglist on changes.
+    Default: `false`
+
+{mappings} `(quarrel.Mappings)` Module mappings. Use `''` (empty string) to
+    disable one.
+
+Fields {quarrel.Mappings} ~
+{add} `(string)` Add current file to arglist.
     Default: `"<leader>a"`
 
-{mappings.edit} `(string)` Edit the arglist.
+{edit} `(string)` Edit the arglist.
     Default: `"<leader>e"`
 
-{mappings.arg1} `(string)` Go to arg file 1. Default: `"<leader>h"`
-{mappings.arg2} `(string)` Go to arg file 2. Default: `"<leader>j"`
-{mappings.arg3} `(string)` Go to arg file 3. Default: `"<leader>k"`
-{mappings.arg4} `(string)` Go to arg file 4. Default: `"<leader>l"`
-{mappings.arg5} `(string)` Go to arg file 5. Default: `"<leader>;"`
+{older} `(string)` Go to older arglist.
+    Default: `"<leader>["`
+
+{newer} `(string)` Go to newer arglist.
+    Default: `"<leader>]"`
+
+{arg1} `(string)` Go to arg file 1. Default: `"<leader>h"`
+{arg2} `(string)` Go to arg file 2. Default: `"<leader>j"`
+{arg3} `(string)` Go to arg file 3. Default: `"<leader>k"`
+{arg4} `(string)` Go to arg file 4. Default: `"<leader>l"`
+{arg5} `(string)` Go to arg file 5. Default: `"<leader>;"`
 
 Usage ~
 >lua
+    ---@type quarrel.Opts
     vim.g.quarrel = {
-            database = `vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack")`,
+            database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
+            hist_level = 10,
+            notify = true,
             mappings = {
                     add = "<leader>qa",
                     edit = "<leader>qe",
+                    older = "<leader>qo",
+                    newer = "<leader>qn",
             },
     }
 <
 ------------------------------------------------------------------------------
-                                                                *Quarrel.save()*
-                            `Quarrel.save`({config})
-Save current arglist to database.
+                                                               *Quarrel.setup()*
+                           `Quarrel.setup`({config})
+Module setup.
 
-@param config quarrel.Config|nil Optional overrides.
+Merges the provided {config} OR `vim.g.quarrel` with the defaults to establish
+the active state. This function initializes |autocommand|s, |user-commands|, and
+|mapping|s. Can be called multiple times to reload settings.
+
+Parameters ~
+{config} `(quarrel.Opts?)` Optional overrides.
 
 ------------------------------------------------------------------------------
-                                                                *Quarrel.load()*
-                            `Quarrel.load`({config})
-Load project-local arglist from database.
+                                                                   *Quarrel-api*
+                                                                   *Quarrel-API*
 
-@param config quarrel.Config|nil Optional overrides.
+Public module functions for manual arglist management.
+
+Functions in this module respect |vim.g.quarrel_disable|. To ensure the arglist
+is not populated with junk, the plugin only tracks "eligible" files. A path is
+considered eligible if:
+- It is not a directory.
+- It is not located in a temporary directory (e.g., /tmp, /var/tmp).
+- It is not an empty string.
+
+------------------------------------------------------------------------------
+                                                         *Quarrel.write_cache()*
+                            `Quarrel.write_cache`()
+Write current arglist to the in-memory cache.
+
+Under normal operation, this is handled with |DirChangedPre| (on |:chdir|) and
+|VimLeavePre| (on |:quit|) |autocommand|s. Call this manually to commit the active
+arglist to the session state without touching the disk. Changes are appended to
+the history for the current project.
+
+------------------------------------------------------------------------------
+                                                            *Quarrel.write_db()*
+                          `Quarrel.write_db`({config})
+Write the in-memory cache to the database file.
+
+Commits the current state of all project arglists to the msgpack database file.
+This is handled automatically on |VimLeavePre|.
+
+Parameters ~
+{config} `(quarrel.Opts?)` Optional overrides.
+
+------------------------------------------------------------------------------
+                                                                *Quarrel.read()*
+                                `Quarrel.read`()
+Read project-local arglist from the in-memory cache.
+
+Under normal operation, this is handled with |DirChanged| (after |:chdir|) and
+|VimEnter| (on startup) |autocommand|s. Call this manually to sync the active
+arglist with the stored state for the current directory.
+
+------------------------------------------------------------------------------
+                                                                 *Quarrel.add()*
+                             `Quarrel.add`({path})
+Add a file to the arglist.
+
+Normalizes the provided {path} to an absolute string before adding it to the
+end of the arglist. If no {path} is provided, the result of |expand|("%:p") is
+used. The resulting list is then deduplicated with |:argdedup| and cached.
+
+Parameters ~
+{path} `(string?)` Absolute path to add. Defaults to current file.
+
+------------------------------------------------------------------------------
+                                                            *Quarrel.goto_arg()*
+                           `Quarrel.goto_arg`({idx})
+Go to a specific arglist file.
+
+Internally executes |:argument| with {idx} as the count. Like standard Vim, this
+uses 1-based indexing. No-op if {idx} is invalid.
+
+Parameters ~
+{idx} `(number)` Arglist index.
+
+------------------------------------------------------------------------------
+                                                               *Quarrel.older()*
+                               `Quarrel.older`()
+Navigate to the older arglist in history.
+
+------------------------------------------------------------------------------
+                                                               *Quarrel.newer()*
+                               `Quarrel.newer`()
+Navigate to the newer arglist in history.
 
 ------------------------------------------------------------------------------
                                                                 *Quarrel.edit()*
-                            `Quarrel.edit`({config})
-Open arglist editor.
+                                `Quarrel.edit`()
+Toggle the arglist editor.
 
-@param config quarrel.Config|nil Optional overrides.
+Opens a |special-buffer| with 'filetype' quarrel for the current directory's
+arglist. Edits, additions, removals, and shuffles are written to the cache.
 
 ------------------------------------------------------------------------------
-                                                              *Quarrel-commands*
+                                                                 *Quarrel.cache*
+                                `Quarrel.cache`
+Class ~
+{quarrel.Cache}
 
+Fields ~
+{db} `(quarrel.Argdata)` In-memory database mapping projects to arglists.
+    This field is lazily loaded from the configured database file on first
+    access. Modifications to this table are volatile until manually committed
+    via |Quarrel.write_db()| or automatically on |VimLeavePre|.
 
-`:Quarrel`
-    Opens a special buffer to edit the current arglist.
+    WARNING: Incorrect edits might break the schema and corrupt the database!
+             Don't touch this if you don't know what you're doing.
+
+Usage ~
+>lua
+    -- Manually clear the cache for a project
+    Quarrel.cache.db.data["/home/user/my_project"] = nil
+
+    -- Set a new arglist for a project
+    Quarrel.cache.db.data["/home/user/my_project"] = {
+            index = 1,
+            entries = {
+                    {
+                            "/home/user/my_project/lua/foo.lua",
+                            "/home/user/my_project/tests/bar.lua",
+                    }
+            }
+    }
+    -- Don't forget to sync your changes!!
+    Quarrel.read()
+<
+------------------------------------------------------------------------------
+                                                       *Quarrel-troubleshooting*
+
+If you encounter issues, please follow these steps:
+
+Run |:checkhealth| `quarrel` to verify your environment, Nvim version, and
+database accessibility.
+
+Use the provided minimal reproduction script to isolate the issue from your
+personal configuration:
+>bash
+    just repro
+<
+Alternatively, run it directly with Neovim:
+>bash
+    nvim --clean -u scripts/repro.lua
+<
+
+If the issue persists in the minimal environment, please report it at:
+    https://github.com/yilisharcs/quarrel.nvim/issues
+
+------------------------------------------------------------------------------
+                                                       *Quarrel-similar-plugins*
+
+- [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon)
+- [nvim-mini/mini.visits](https://github.com/nvim-mini/mini.visits)
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:
