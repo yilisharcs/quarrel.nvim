@@ -11,7 +11,9 @@ local manifest = {
         metadata = {},
 }
 setmetatable(manifest, {
-        __call = function(self) return { self.entrypoint, unpack(self.metadata) } end,
+        __call = function(self)
+                return { self.entrypoint, unpack(self.metadata) }
+        end,
 })
 
 local H = {}
@@ -30,7 +32,9 @@ H.s8 = string.rep(" ", 8)
 ---@return boolean? # True if found, nil otherwise.
 H.has_pattern = function(section, pattern)
         for _, line in ipairs(section) do
-                if type(line) == "string" and line:find(pattern, 1, true) then return true end
+                if type(line) == "string" and line:find(pattern, 1, true) then
+                        return true
+                end
         end
 end
 
@@ -38,15 +42,15 @@ end
 H.find_block_by_class = function(doc, class_name)
         local file = doc[1]
         for _, block in ipairs(file) do
-                local is_match = block:has_descendant(
-                        function(s)
-                                return type(s) == "table"
-                                        and s.info
-                                        and s.info.id == "@class"
-                                        and H.has_pattern(s, class_name)
-                        end
-                )
-                if is_match then return block end
+                local is_match = block:has_descendant(function(s)
+                        return type(s) == "table"
+                                and s.info
+                                and s.info.id == "@class"
+                                and H.has_pattern(s, class_name)
+                end)
+                if is_match then
+                        return block
+                end
         end
 end
 
@@ -86,12 +90,16 @@ H.parse_fields = function(block)
         local fields = {}
         for _, s in ipairs(block) do
                 local id = (s.info and type(s.info.id) == "string") and s.info.id or ""
-                if not id:match("field") then goto next_field end
+                if not id:match("field") then
+                        goto next_field
+                end
 
                 local lines = {}
                 for _, l in ipairs(s) do
                         -- strip structural headers injected by mini.doc
-                        if not l:match("Fields%s*.*~") then table.insert(lines, l) end
+                        if not l:match("Fields%s*.*~") then
+                                table.insert(lines, l)
+                        end
                 end
 
                 local full_text = table.concat(lines, " "):gsub("%s+", " ")
@@ -131,7 +139,9 @@ end
 H.collect_sections = function(block, options, acc_tbl)
         for _, s in ipairs(block) do
                 local id = s.info and s.info.id
-                if options.id_filter and not options.id_filter(id) then goto next_section end
+                if options.id_filter and not options.id_filter(id) then
+                        goto next_section
+                end
 
                 -- intra-section line filtering
                 local content_block = {}
@@ -140,7 +150,9 @@ H.collect_sections = function(block, options, acc_tbl)
                                 or line:match("^%s*%-+%s*$")
                                 or line:find("Fields ~", 1, true)
 
-                        if is_invalid then goto next_line end
+                        if is_invalid then
+                                goto next_line
+                        end
                         table.insert(content_block, line)
 
                         ::next_line::
@@ -160,7 +172,9 @@ H.collect_sections = function(block, options, acc_tbl)
 
                         -- override section ID for class definitions to suppress the automated
                         -- horizontal line injection, while preserving the actual text content
-                        if new_s.info.id == "@class" then new_s.info.id = "@text" end
+                        if new_s.info.id == "@class" then
+                                new_s.info.id = "@text"
+                        end
 
                         table.insert(acc_tbl, new_s)
                 end
@@ -177,36 +191,30 @@ H.prepare_doc_tree = function(doc, is_readme)
 
         for i, block in ipairs(file) do
                 if
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@tag"
-                                                and H.has_pattern(s, "Quarrel-configuration")
-                                end
-                        )
+                        block:has_descendant(function(s)
+                                return type(s) == "table"
+                                        and s.info
+                                        and s.info.id == "@tag"
+                                        and H.has_pattern(s, "Quarrel-configuration")
+                        end)
                 then
                         blocks.config, idxs.config = block, i
                 elseif
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@class"
-                                                and H.has_pattern(s, "quarrel.Mappings")
-                                end
-                        )
+                        block:has_descendant(function(s)
+                                return type(s) == "table"
+                                        and s.info
+                                        and s.info.id == "@class"
+                                        and H.has_pattern(s, "quarrel.Mappings")
+                        end)
                 then
                         blocks.mappings, idxs.mappings = block, i
                 elseif
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@tag"
-                                                and H.has_pattern(s, "Quarrel.config")
-                                end
-                        )
+                        block:has_descendant(function(s)
+                                return type(s) == "table"
+                                        and s.info
+                                        and s.info.id == "@tag"
+                                        and H.has_pattern(s, "Quarrel.config")
+                        end)
                 then
                         blocks.var, idxs.var = block, i
                 end
@@ -272,18 +280,26 @@ H.prepare_doc_tree = function(doc, is_readme)
 
                 -- header tags
                 H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@tag" end,
+                        id_filter = function(id)
+                                return id == "@tag"
+                        end,
                 }, merged_sections)
                 H.collect_sections(blocks.var, {
-                        id_filter = function(id) return id == "@tag" end,
+                        id_filter = function(id)
+                                return id == "@tag"
+                        end,
                 }, merged_sections)
 
                 -- signature and config class lead
                 H.collect_sections(blocks.var, {
-                        id_filter = function(id) return id == "@signature" end,
+                        id_filter = function(id)
+                                return id == "@signature"
+                        end,
                 }, merged_sections)
                 H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@class" end,
+                        id_filter = function(id)
+                                return id == "@class"
+                        end,
                 }, merged_sections)
 
                 table.insert(merged_sections, blank)
@@ -296,7 +312,9 @@ H.prepare_doc_tree = function(doc, is_readme)
                 -- base config fields
                 local config_fields = {}
                 H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@field" end,
+                        id_filter = function(id)
+                                return id == "@field"
+                        end,
                 }, config_fields)
 
                 for _, field in ipairs(config_fields) do
@@ -311,7 +329,9 @@ H.prepare_doc_tree = function(doc, is_readme)
                                 })
                                 local m_fields = {}
                                 H.collect_sections(blocks.mappings, {
-                                        id_filter = function(id) return id == "@field" end,
+                                        id_filter = function(id)
+                                                return id == "@field"
+                                        end,
                                 }, m_fields)
 
                                 for _, mf in ipairs(m_fields) do
@@ -319,7 +339,9 @@ H.prepare_doc_tree = function(doc, is_readme)
 
                                         -- NOTE: only add a blank line if the field has a multi-line
                                         --       description. why? argN was flattened on purpose.
-                                        if #mf > 1 then table.insert(merged_sections, blank) end
+                                        if #mf > 1 then
+                                                table.insert(merged_sections, blank)
+                                        end
                                 end
                         else
                                 table.insert(merged_sections, blank)
@@ -329,7 +351,9 @@ H.prepare_doc_tree = function(doc, is_readme)
                 -- footer: config usage and removal of the @type tag
                 table.insert(merged_sections, blank)
                 H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@usage" end,
+                        id_filter = function(id)
+                                return id == "@usage"
+                        end,
                 }, merged_sections)
 
                 -- overwrite entries and trim if the new content is shorter
@@ -347,183 +371,295 @@ H.prepare_doc_tree = function(doc, is_readme)
                 -- from the @type annotation in the usage block
                 for i, block in ipairs(file) do
                         if
-                                block:has_descendant(
-                                        function(s)
-                                                return type(s) == "table"
-                                                        and s.info
-                                                        and s.info.id == "@tag"
-                                                        and H.has_pattern(s, "vim.g.quarrel")
-                                        end
-                                )
+                                block:has_descendant(function(s)
+                                        return type(s) == "table"
+                                                and s.info
+                                                and s.info.id == "@tag"
+                                                and H.has_pattern(s, "vim.g.quarrel")
+                                end)
                         then
                                 table.insert(duplicates, i)
                         end
                 end
 
-                table.sort(duplicates, function(a, b) return a > b end)
+                table.sort(duplicates, function(a, b)
+                        return a > b
+                end)
                 for _, idx in ipairs(duplicates) do
                         file:remove(idx)
                 end
         end
 end
 
+-- logic for Vim help file
 local doc_hooks = vim.deepcopy(minidoc.config.hooks)
 doc_hooks.doc = function(doc)
-        local file = doc[1]
-        local blocks = { config = nil, mappings = nil, var = nil }
-        local idxs = { config = nil, mappings = nil, var = nil }
-
-        for i, block in ipairs(file) do
-                if
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@tag"
-                                                and H.has_pattern(s, "Quarrel-configuration")
-                                end
-                        )
-                then
-                        blocks.config, idxs.config = block, i
-                elseif
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@class"
-                                                and H.has_pattern(s, "quarrel.Mappings")
-                                end
-                        )
-                then
-                        blocks.mappings, idxs.mappings = block, i
-                elseif
-                        block:has_descendant(
-                                function(s)
-                                        return type(s) == "table"
-                                                and s.info
-                                                and s.info.id == "@tag"
-                                                and H.has_pattern(s, "Quarrel.config")
-                                end
-                        )
-                then
-                        blocks.var, idxs.var = block, i
-                end
-        end
-
-        if blocks.config and blocks.mappings and blocks.var then
-                local merged_sections = {
-                        {
-                                type = "section",
-                                info = { id = "@text" },
-                                [1] = string.rep("-", 78),
-                        },
-                }
-
-                local blank = {
-                        type = "section",
-                        info = { id = "@text" },
-                        [1] = "",
-                }
-
-                -- header tags
-                H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@tag" end,
-                }, merged_sections)
-                H.collect_sections(blocks.var, {
-                        id_filter = function(id) return id == "@tag" end,
-                }, merged_sections)
-
-                -- signature and config class lead
-                H.collect_sections(blocks.var, {
-                        id_filter = function(id) return id == "@signature" end,
-                }, merged_sections)
-                H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@class" end,
-                }, merged_sections)
-
-                table.insert(merged_sections, blank)
-                table.insert(merged_sections, {
-                        type = "section",
-                        info = { id = "@text" },
-                        [1] = "Fields ~",
-                })
-
-                -- base config fields
-                local config_fields = {}
-                H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@field" end,
-                }, config_fields)
-
-                for _, field in ipairs(config_fields) do
-                        table.insert(merged_sections, field)
-                        if H.has_pattern(field, "{mappings}") then
-                                -- inline the mappings fields
-                                table.insert(merged_sections, blank)
-                                table.insert(merged_sections, {
-                                        type = "section",
-                                        info = { id = "@text" },
-                                        [1] = "Fields {quarrel.Mappings} ~",
-                                })
-                                local m_fields = {}
-                                H.collect_sections(blocks.mappings, {
-                                        id_filter = function(id) return id == "@field" end,
-                                }, m_fields)
-
-                                for _, mf in ipairs(m_fields) do
-                                        table.insert(merged_sections, mf)
-
-                                        -- NOTE: only add a blank line if the field has a multi-line
-                                        --       description. why? argN was flattened on purpose.
-                                        if #mf > 1 then table.insert(merged_sections, blank) end
-                                end
-                        else
-                                table.insert(merged_sections, blank)
-                        end
-                end
-
-                -- footer: config usage and removal of the @type tag
-                table.insert(merged_sections, blank)
-                H.collect_sections(blocks.config, {
-                        id_filter = function(id) return id == "@usage" end,
-                }, merged_sections)
-
-                -- overwrite entries and trim if the new content is shorter
-                for i = 1, #merged_sections do
-                        blocks.config[i] = merged_sections[i]
-                end
-                for i = #merged_sections + 1, #blocks.config do
-                        blocks.config[i] = nil
-                end
-
-                -- get rid of duplicates
-                local duplicates = { idxs.mappings, idxs.var }
-
-                -- find and remove the block for vim.g.quarrel generated
-                -- from the @type annotation in the usage block
-                for i, block in ipairs(file) do
-                        if
-                                block:has_descendant(
-                                        function(s)
-                                                return type(s) == "table"
-                                                        and s.info
-                                                        and s.info.id == "@tag"
-                                                        and H.has_pattern(s, "vim.g.quarrel")
-                                        end
-                                )
-                        then
-                                table.insert(duplicates, i)
-                        end
-                end
-
-                table.sort(duplicates, function(a, b) return a > b end)
-                for _, idx in ipairs(duplicates) do
-                        file:remove(idx)
-                end
-        end
-
+        H.prepare_doc_tree(doc, false)
         minidoc.default_hooks.doc(doc)
+end
+
+-- logic for README.md
+local readme_hooks = vim.deepcopy(minidoc.config.hooks)
+readme_hooks.sections["@toc_entry"] = function(s)
+        local content = vim.trim(table.concat(s, " "))
+        s:clear_lines()
+        s:insert("## " .. content)
+        s:insert("")
+end
+readme_hooks.doc = function(doc)
+        local file = doc[1]
+        H.prepare_doc_tree(doc, true)
+
+        local to_remove = {}
+        local skip = false
+        for i, block in ipairs(file) do
+                local should_remove = false
+                -- identify existing blocks to remove for README
+                local is_config_tag = block:has_descendant(function(s)
+                        return s.info
+                                and s.info.id == "@tag"
+                                and H.has_pattern(s, "Quarrel-configuration")
+                end)
+                local is_quarrel_class = block:has_descendant(function(s)
+                        return s.info
+                                and s.info.id == "@class"
+                                and H.has_pattern(s, "quarrel.")
+                                and not H.has_pattern(s, "quarrel.Config")
+                end)
+                local is_var = block:has_descendant(function(s)
+                        return s.info and s.info.id == "@tag" and H.has_pattern(s, "Quarrel.config")
+                end)
+
+                if is_config_tag or is_quarrel_class or is_var then
+                        should_remove = true
+                end
+
+                -- find the start of the API section
+                if
+                        block:has_descendant(function(s)
+                                return s.info
+                                        and s.info.id == "@toc_entry"
+                                        and H.has_pattern(s, "PLUGIN API")
+                        end)
+                then
+                        skip = true
+                end
+
+                if skip then
+                        should_remove = true
+                end
+
+                -- find the next major section to stop skipping
+                if
+                        block:has_descendant(function(s)
+                                return s.info
+                                        and s.info.id == "@toc_entry"
+                                        and H.has_pattern(s, "TROUBLESHOOTING")
+                        end)
+                then
+                        skip = false
+                        should_remove = false
+                end
+
+                if should_remove then
+                        table.insert(to_remove, i)
+                end
+        end
+
+        -- remove the blocks from the tree in reverse
+        for i = #to_remove, 1, -1 do
+                file:remove(to_remove[i])
+        end
+
+        -- remove `quarrel.Setup` class bloc
+        for i = #file, 1, -1 do
+                if
+                        file[i]:has_descendant(function(s)
+                                return s.info
+                                        and s.info.id == "@signature"
+                                        and H.has_pattern(s, "Quarrel.setup")
+                        end)
+                then
+                        file:remove(i)
+                end
+        end
+
+        -- NOTE: skip default doc hook which adds Vim modeline!!
+        -- minidoc.default_hooks.doc(doc)
+end
+
+readme_hooks.write_pre = function(lines)
+        -- header
+        local res = {
+                "# quarrel.nvim",
+                "",
+                "Automagically manage project-local arglists.",
+                "",
+                "## INSTALLATION",
+                "",
+                "Using Neovim's built-in package manager:",
+                "",
+                "```lua",
+                "vim.pack.add({",
+                H.s8 .. 'src = "https://github.com/yilisharcs/quarrel.nvim",',
+                "})",
+                "```",
+                "",
+                "Using [lazy.nvim](https://github.com/folke/lazy.nvim):",
+                "",
+                "```lua",
+                "{",
+                H.s8 .. '"yilisharcs/quarrel.nvim",',
+                H.s8 .. "init = function()",
+                H.s8 .. H.s8 .. "vim.g.quarrel = { --[[ config goes here ]] }",
+                H.s8 .. "end",
+                "}",
+                "```",
+                "",
+        }
+
+        local in_code_block = false
+        for _, line in ipairs(lines) do
+                if
+                        -- separators
+                        line:match("^=+$")
+                        or line:match("^%-+$")
+                        -- title
+                        or line:find("quarrel.nvim.txt", 1, true)
+                        -- help tags
+                        or line:match("^%s*%*Quarrel%S*%*%s*$")
+                        -- license line
+                        or line:match("^%s*Apache License 2.0 Copyright")
+                        -- TOC
+                        or line:match("^%s*Table of Contents%s*$")
+                        -- modeline
+                        or line:match("vim:tw=78:ts=8:noet:ft=help:norl:")
+                then
+                        goto next_line
+                end
+
+                if line == "`Update global mark position on BufLeave, VimLeavePre`" then
+                        line = "**Update global mark position on BufLeave, VimLeavePre**"
+                end
+
+                if line:match("^%s+https://github.com/neovim/neovim/issues/36358$") then
+                        if #res > 0 then
+                                res[#res] = res[#res] .. ": " .. vim.trim(line)
+                                goto next_line
+                        end
+                end
+
+                if line:match("^%s+https://github.com/yilisharcs/quarrel.nvim/issues$") then
+                        table.insert(res, "")
+                        table.insert(res, vim.trim(line))
+                        goto next_line
+                end
+
+                -- convert vim code blocks into markdown code blocks
+                if line:match("^%s*>lua%s*$") then
+                        in_code_block = true
+                        table.insert(res, "")
+                        table.insert(res, "```lua")
+                        goto next_line
+                elseif line:match("^%s*>bash%s*$") then
+                        in_code_block = true
+                        table.insert(res, "")
+                        table.insert(res, "```bash")
+                        goto next_line
+                elseif line:match("^%s*>%s*$") then
+                        in_code_block = true
+                        table.insert(res, "")
+                        table.insert(res, "```")
+                        goto next_line
+                elseif line:match("^%s*<%s*$") then
+                        in_code_block = false
+                        table.insert(res, "```")
+                        table.insert(res, "")
+                        goto next_line
+                end
+
+                -- level 3 headers
+                local h_title = line:match("^%s*#%s*([^~]-)%s*~%s*$")
+                if h_title then
+                        table.insert(res, "")
+                        table.insert(res, "### " .. vim.trim(h_title))
+                        table.insert(res, "")
+                        goto next_line
+                end
+
+                -- level 5 headers
+                local cmd_tag = line:match("^%s+%*(:Q%w+)%*%s*$")
+                if cmd_tag then
+                        table.insert(res, "")
+                        table.insert(res, "##### " .. cmd_tag)
+                        table.insert(res, "")
+                        goto next_line
+                end
+
+                if in_code_block then
+                        -- de-indent
+                        line = line:gsub("^" .. H.s4, "")
+                else
+                        line = line:gsub("%*quarrel.nvim%*", "_quarrel.nvim_")
+                        -- replace command signature at start of
+                        -- line with spaces to maintain alignment
+                        line = line:gsub("^(:Q%w+)", function(m)
+                                return string.rep(" ", #m)
+                        end)
+
+                        -- inline formatting
+                        line = line:gsub("%[|MiniMisc|%]", "[MiniMisc]")
+                        line = line:gsub("|:checkhealth| `quarrel` ", "`:checkhealth quarrel` ")
+                        line = line:gsub("|([^|]+)|", "`%1`")
+
+                        -- lines starting with "`" are wrapped
+                        -- incorrectly on GitHub... i think...
+                        if line:match("^`%S") then
+                                if #res > 0 and res[#res] ~= "" and not res[#res]:match("\\$") then
+                                        res[#res] = res[#res] .. " \\"
+                                end
+                        end
+                end
+                table.insert(res, line)
+
+                ::next_line::
+        end
+
+        -- append license
+        vim.list_extend(res, {
+                "",
+                "## LICENSE",
+                "",
+                "Copyright 2025-2026 yilisharcs <yilisharcs@gmail.com>",
+                "",
+                'Licensed under the Apache License, Version 2.0 (the "License");',
+                "you may not use this file except in compliance with the License.",
+                "You may obtain a copy of the License at",
+                "",
+                "http://www.apache.org/licenses/LICENSE-2.0",
+                "",
+                "Unless required by applicable law or agreed to in writing, software",
+                'distributed under the License is distributed on an "AS IS" BASIS,',
+                "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.",
+                "See the License for the specific language governing permissions and",
+                "limitations under the License.",
+        })
+
+        -- cleanup: ensure single blank lines between blocks
+        local final_res = {}
+        for i, line in ipairs(res) do
+                if line ~= "" or (final_res[#final_res] ~= "" and i < #res) then
+                        table.insert(final_res, line)
+                end
+        end
+
+        return final_res
 end
 
 minidoc.generate(manifest(), "doc/quarrel.nvim.txt", {
         hooks = doc_hooks,
+})
+
+minidoc.generate(manifest(), "README.md", {
+        hooks = readme_hooks,
 })
