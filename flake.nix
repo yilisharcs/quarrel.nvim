@@ -16,6 +16,7 @@
         # runner deps
         pkgs.just
         pkgs.nushell
+        pkgs.lua-language-server
         # formatters
         pkgs.alejandra
       ];
