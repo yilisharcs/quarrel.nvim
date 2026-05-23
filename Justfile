@@ -7,5 +7,10 @@ doc:
 repro:
         nvim --clean -u scripts/repro.lua
 
+check: lint format
+
+lint:
+        lua-language-server --check . --checklevel=Hint
+
 format:
         stylua .
