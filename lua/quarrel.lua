@@ -35,7 +35,7 @@ local H = {}
 
 --- Module setup.
 ---
---- @param config quarrel.Config|nil Optional overrides.
+---@param config quarrel.Config|nil Optional overrides.
 function Quarrel.setup(config)
         if vim.version.cmp(vim.version(), { 0, 12, 0 }) < 0 then
                 vim.notify("quarrel.nvim requires Neovim 0.12+", vim.log.levels.ERROR)
@@ -98,7 +98,7 @@ Quarrel.config = {
 
 --- Save current arglist to database.
 ---
---- @param config quarrel.Config|nil Optional overrides.
+---@param config quarrel.Config|nil Optional overrides.
 function Quarrel.save(config)
         if H.is_disabled() then return end
         local active_config = H.get_config(config)
@@ -120,7 +120,7 @@ end
 
 --- Load project-local arglist from database.
 ---
---- @param config quarrel.Config|nil Optional overrides.
+---@param config quarrel.Config|nil Optional overrides.
 function Quarrel.load(config)
         if H.is_disabled() then return end
         local active_config = H.get_config(config)
@@ -140,7 +140,7 @@ end
 
 --- Open arglist editor.
 ---
---- @param config quarrel.Config|nil Optional overrides.
+---@param config quarrel.Config|nil Optional overrides.
 function Quarrel.edit(config)
         if H.is_disabled() then return end
 
@@ -200,9 +200,9 @@ H.default_config = vim.deepcopy(Quarrel.config)
 ---@private
 --- Setup configuration.
 ---
---- @param config quarrel.Config|nil Raw configuration table.
+---@param config quarrel.Config|nil Raw configuration table.
 ---
---- @return quarrel.Config # Validated and merged configuration.
+---@return quarrel.Config # Validated and merged configuration.
 H.setup_config = function(config)
         vim.validate({ config = { config, "table", true } })
         config = vim.tbl_deep_extend("force", vim.deepcopy(H.default_config), config or {})
@@ -225,7 +225,7 @@ end
 ---@private
 --- Apply configuration side-effects.
 ---
---- @param config quarrel.Config Validated configuration table.
+---@param config quarrel.Config Validated configuration table.
 H.apply_config = function(config)
         Quarrel.config = config
         vim.g.quarrel = config
@@ -294,7 +294,7 @@ end
 ---@private
 --- Create module mappings.
 ---
---- @param config quarrel.Config Validated configuration table.
+---@param config quarrel.Config Validated configuration table.
 H.create_mappings = function(config)
         local m = config.mappings
         local map = function(lhs, rhs, desc)
@@ -322,7 +322,7 @@ end
 ---@private
 --- Read data from database.
 ---
---- @param path string File path to read from.
+---@param path string File path to read from.
 H.read_db = function(path)
         if vim.fn.filereadable(path) == 0 then return {} end
 
@@ -340,8 +340,8 @@ end
 ---@private
 --- Write data to database.
 ---
---- @param path string File path to write to.
---- @param data table Data to encode and write.
+---@param path string File path to write to.
+---@param data table Data to encode and write.
 H.write_db = function(path, data)
         local dir = vim.fs.dirname(path)
         if vim.fn.isdirectory(dir) == 0 then vim.fn.mkdir(dir, "p") end
@@ -378,9 +378,9 @@ end
 ---@private
 --- Check if a path is eligible for the arglist.
 ---
---- @param path string Filepath to check.
+---@param path string Filepath to check.
 ---
---- @return string|nil # The absolute path if eligible, nil otherwise.
+---@return string|nil # The absolute path if eligible, nil otherwise.
 H.is_eligible = function(path)
         if type(path) ~= "string" or path == "" then return nil end
 
@@ -409,7 +409,7 @@ end
 ---@private
 --- Add a path to the end of the arglist with proper escaping.
 ---
---- @param path string Absolute path to add.
+---@param path string Absolute path to add.
 H.argadd = function(path) vim.cmd("$argadd " .. vim.fn.fnameescape(path)) end
 
 return Quarrel
