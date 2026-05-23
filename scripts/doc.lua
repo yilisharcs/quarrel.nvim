@@ -400,6 +400,15 @@ end
 
 -- logic for README.md
 local readme_hooks = vim.deepcopy(minidoc.config.hooks)
+
+-- NOTE: the original hook generates a tags file.
+--       the README.md does not need a tags file.
+readme_hooks.write_post = function(d)
+        local output = d.info.output
+        local msg = ("Help file %s is successfully generated."):format(vim.inspect(output))
+        vim.notify(msg, vim.log.levels.INFO)
+end
+
 readme_hooks.sections["@toc_entry"] = function(s)
         local content = vim.trim(table.concat(s, " "))
         s:clear_lines()
