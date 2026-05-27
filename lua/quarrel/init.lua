@@ -558,8 +558,9 @@ H.notify = function()
         end
 
         if H.is_notify_hijacked == nil then
-                local source = debug.getinfo(vim.notify, "S").source
-                H.is_notify_hijacked = source ~= "@vim/_core/editor.lua"
+                local info = debug.getinfo(vim.notify, "Su")
+                -- NOTE: source checks for snacks.nvim, nups checks for mini.nvim
+                H.is_notify_hijacked = info.source ~= "@vim/_core/editor.lua" or info.nups > 0
         end
 
         local argv = vim.fn.argv() --[[@as string[] ]]
