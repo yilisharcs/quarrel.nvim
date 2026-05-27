@@ -863,7 +863,7 @@ return Quarrel
 --- <
 ---
 --- If the issue persists in the minimal environment, please report it at:
----     https://github.com/yilisharcs/quarrel.nvim/issues
+---     https://codeberg.org/yilisharcs/quarrel.nvim/issues
 
 ---@toc_entry SIMILAR PLUGINS
 ---@tag Quarrel-similar-plugins
