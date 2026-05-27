@@ -639,7 +639,7 @@ readme_hooks.write_pre = function(lines)
                 "",
                 "## LICENSE",
                 "",
-                "Copyright 2025-2026 yilisharcs <yilisharcs@gmail.com>",
+                "Copyright 2025-2026 yilisharcs",
                 "",
                 'Licensed under the Apache License, Version 2.0 (the "License");',
                 "you may not use this file except in compliance with the License.",
