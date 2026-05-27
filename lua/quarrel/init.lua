@@ -533,63 +533,6 @@ function H.apply_config(config)
 end
 
 ---@private
---- Get current configuration.
----
----@param config quarrel.Opts? Optional overrides for this call.
----
----@return quarrel.Config
-function H.get_config(config)
-        return vim.tbl_deep_extend("force", H.DEFAULT_CONFIG, vim.g.quarrel or {}, config or {})
-end
-
----@private
---- Check if module is disabled.
----
----@return boolean # True if disabled globally.
-function H.is_disabled()
-        return vim.g.quarrel_disable == true
-end
-
----@private
---- Report the current arglist status.
-function H.notify()
-        if not H.get_config().notify then
-                return
-        end
-
-        if H.is_notify_hijacked == nil then
-                local info = debug.getinfo(vim.notify, "Su")
-                -- NOTE: source checks for snacks.nvim, nups checks for mini.nvim
-                H.is_notify_hijacked = info.source ~= "@vim/_core/editor.lua" or info.nups > 0
-        end
-
-        local argv = vim.fn.argv() --[[@as string[] ]]
-        local cur_idx = vim.fn.argidx() + 1
-        local parts = {}
-        for i, arg in ipairs(argv) do
-                local f = vim.fn.fnamemodify(arg, ":.")
-
-                if H.is_notify_hijacked then
-                        f = ("[%d] = %q"):format(i, f)
-                elseif i == cur_idx then
-                        f = "[" .. f .. "]"
-                end
-
-                table.insert(parts, f)
-        end
-
-        local msg = table.concat(parts, "\n")
-        if H.is_notify_hijacked then
-                msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}"
-        end
-
-        vim.notify(msg, vim.log.levels.INFO, {
-                title = "quarrel",
-                ft = "lua",
-        })
-end
-
----@private
 --- Create module autocommands.
 function H.create_autocommands()
         local group = vim.api.nvim_create_augroup("Quarrel", { clear = true })
@@ -697,6 +640,63 @@ function H.create_mappings(config)
         map(m.arg3, "<Plug>(QuarrelArg3)", "Arg file 3")
         map(m.arg4, "<Plug>(QuarrelArg4)", "Arg file 4")
         map(m.arg5, "<Plug>(QuarrelArg5)", "Arg file 5")
+end
+
+---@private
+--- Get current configuration.
+---
+---@param config quarrel.Opts? Optional overrides for this call.
+---
+---@return quarrel.Config
+function H.get_config(config)
+        return vim.tbl_deep_extend("force", H.DEFAULT_CONFIG, vim.g.quarrel or {}, config or {})
+end
+
+---@private
+--- Check if module is disabled.
+---
+---@return boolean # True if disabled globally.
+function H.is_disabled()
+        return vim.g.quarrel_disable == true
+end
+
+---@private
+--- Report the current arglist status.
+function H.notify()
+        if not H.get_config().notify then
+                return
+        end
+
+        if H.is_notify_hijacked == nil then
+                local info = debug.getinfo(vim.notify, "Su")
+                -- NOTE: source checks for snacks.nvim, nups checks for mini.nvim
+                H.is_notify_hijacked = info.source ~= "@vim/_core/editor.lua" or info.nups > 0
+        end
+
+        local argv = vim.fn.argv() --[[@as string[] ]]
+        local cur_idx = vim.fn.argidx() + 1
+        local parts = {}
+        for i, arg in ipairs(argv) do
+                local f = vim.fn.fnamemodify(arg, ":.")
+
+                if H.is_notify_hijacked then
+                        f = ("[%d] = %q"):format(i, f)
+                elseif i == cur_idx then
+                        f = "[" .. f .. "]"
+                end
+
+                table.insert(parts, f)
+        end
+
+        local msg = table.concat(parts, "\n")
+        if H.is_notify_hijacked then
+                msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}"
+        end
+
+        vim.notify(msg, vim.log.levels.INFO, {
+                title = "quarrel",
+                ft = "lua",
+        })
 end
 
 ---@private
