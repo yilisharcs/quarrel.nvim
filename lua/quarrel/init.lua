@@ -458,7 +458,7 @@ setmetatable(Quarrel.cache, {
 
 ---@private
 ---@type quarrel.Config
-H.default_config = vim.deepcopy(Quarrel.config)
+H.DEFAULT_CONFIG = vim.deepcopy(Quarrel.config)
 
 ---@private
 ---@type number?
@@ -480,13 +480,13 @@ H.is_notify_hijacked = nil
 ---@param config quarrel.Opts? Raw configuration table.
 ---
 ---@return quarrel.Config # Validated and merged configuration.
-H.setup_config = function(config)
+function H.setup_config(config)
         Quarrel._validate_config(config)
 
         -- stylua: ignore
         local merged = vim.tbl_deep_extend(
                 "force",
-                vim.deepcopy(H.default_config),
+                vim.deepcopy(H.DEFAULT_CONFIG),
                 config or {}
         ) --[[@as quarrel.Config]]
 
@@ -524,7 +524,7 @@ end
 --- Apply configuration side-effects.
 ---
 ---@param config quarrel.Config Validated configuration table.
-H.apply_config = function(config)
+function H.apply_config(config)
         Quarrel.config = config
         vim.g.quarrel = config
         H.create_autocommands()
@@ -538,21 +538,21 @@ end
 ---@param config quarrel.Opts? Optional overrides for this call.
 ---
 ---@return quarrel.Config
-H.get_config = function(config)
-        return vim.tbl_deep_extend("force", H.default_config, vim.g.quarrel or {}, config or {})
+function H.get_config(config)
+        return vim.tbl_deep_extend("force", H.DEFAULT_CONFIG, vim.g.quarrel or {}, config or {})
 end
 
 ---@private
 --- Check if module is disabled.
 ---
 ---@return boolean # True if disabled globally.
-H.is_disabled = function()
+function H.is_disabled()
         return vim.g.quarrel_disable == true
 end
 
 ---@private
 --- Report the current arglist status.
-H.notify = function()
+function H.notify()
         if not H.get_config().notify then
                 return
         end
@@ -591,7 +591,7 @@ end
 
 ---@private
 --- Create module autocommands.
-H.create_autocommands = function()
+function H.create_autocommands()
         local group = vim.api.nvim_create_augroup("Quarrel", { clear = true })
 
         vim.api.nvim_create_autocmd({ "DirChangedPre", "VimLeavePre" }, {
@@ -631,7 +631,7 @@ end
 
 ---@private
 --- Create module user commands.
-H.create_usercommands = function()
+function H.create_usercommands()
         vim.api.nvim_create_user_command("Qedit", function()
                 Quarrel.edit()
         end, { desc = "Edit the arglist" })
@@ -649,7 +649,7 @@ end
 --- Create module mappings.
 ---
 ---@param config quarrel.Config Validated configuration table.
-H.create_mappings = function(config)
+function H.create_mappings(config)
         local map = function(lhs, rhs, desc)
                 if lhs == "" then
                         return
@@ -704,7 +704,7 @@ end
 ---
 ---@param path string File path to write to.
 ---@param data quarrel.Argdata Data to encode and write.
-H.write_db_file = function(path, data)
+function H.write_db_file(path, data)
         local dir = vim.fs.dirname(path)
         if vim.fn.isdirectory(dir) == 0 then
                 vim.fn.mkdir(dir, "p")
@@ -732,7 +732,7 @@ end
 ---@param path string File path to read from.
 ---
 ---@return quarrel.Argdata
-H.read_db_file = function(path)
+function H.read_db_file(path)
         local db = {
                 _meta = {
                         version = 1,
@@ -763,7 +763,7 @@ end
 --- Initialize arglist from startup arguments or database.
 ---
 --- Filters out any arguments that evaluate to a directory.
-H.init_arglist = function()
+function H.init_arglist()
         local argf_no_dir = vim.iter(vim.v.argf):map(H.is_eligible):totable()
 
         if #argf_no_dir == 0 then
@@ -801,7 +801,7 @@ end
 ---@param path string Filepath to check.
 ---
 ---@return string? # The absolute path if eligible, nil otherwise.
-H.is_eligible = function(path)
+function H.is_eligible(path)
         if type(path) ~= "string" or path == "" then
                 return nil
         end
@@ -838,7 +838,7 @@ end
 --- Add a path to the end of the arglist with proper escaping.
 ---
 ---@param path string Absolute path to add.
-H.argadd = function(path)
+function H.argadd(path)
         vim.cmd("$argadd " .. vim.fn.fnameescape(path))
 end
 

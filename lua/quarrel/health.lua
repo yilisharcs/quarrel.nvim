@@ -1,4 +1,4 @@
-local M = {}
+local Health = {}
 
 local start = vim.health.start
 local ok = vim.health.ok
@@ -6,7 +6,7 @@ local warn = vim.health.warn
 local error = vim.health.error
 local info = vim.health.info
 
-M.check = function()
+function Health.check()
         start("quarrel.nvim [status]")
 
         -- check version
@@ -188,4 +188,4 @@ M.check = function()
         end
 end
 
-return M
+return Health
