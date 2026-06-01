@@ -93,9 +93,9 @@ See `Quarrel-configuration` for `config` structure and default values.
 ### Tips
 
 Leverage built-in Neovim features to make editing more pleasant:
-- Edit the `:previous` or `:next` arglist files with `[a` and `a]`.
-- `:rewind` to the first or jump to the `:last` arglist files with `[A` and `A]`.
-- Operate on the arglist with `:argdo`.
+    - Edit the `:previous` or `:next` arglist files with `[a` and `a]`.
+    - `:rewind` to the first or jump to the `:last` arglist files with `[A` and `A]`.
+    - Operate on the arglist with `:argdo`.
 
 ### Disabling
 
@@ -161,8 +161,8 @@ If the issue persists in the minimal environment, please report it at:
 
 ## SIMILAR PLUGINS
 
-- [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon)
-- [nvim-mini/mini.visits](https://github.com/nvim-mini/mini.visits)
+    - [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon)
+    - [nvim-mini/mini.visits](https://github.com/nvim-mini/mini.visits)
 
 ## LICENSE
 

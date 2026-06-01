@@ -76,9 +76,9 @@
 --- # Tips ~
 ---
 --- Leverage built-in Neovim features to make editing more pleasant:
---- - Edit the |:previous| or |:next| arglist files with `[a` and `a]`.
---- - |:rewind| to the first or jump to the |:last| arglist files with `[A` and `A]`.
---- - Operate on the arglist with |:argdo|.
+---     - Edit the |:previous| or |:next| arglist files with `[a` and `a]`.
+---     - |:rewind| to the first or jump to the |:last| arglist files with `[A` and `A]`.
+---     - Operate on the arglist with |:argdo|.
 ---
 --- # Disabling ~
 ---
@@ -201,9 +201,9 @@ end
 --- Functions in this module respect |vim.g.quarrel_disable|. To ensure the arglist
 --- is not populated with junk, the plugin only tracks "eligible" files. A path is
 --- considered eligible if:
---- - It is not a directory.
---- - It is not located in a temporary directory (e.g., /tmp, /var/tmp).
---- - It is not an empty string.
+---     - It is not a directory.
+---     - It is not located in a temporary directory (e.g., /tmp, /var/tmp).
+---     - It is not an empty string.
 
 --- Write current arglist to the in-memory cache.
 ---
@@ -869,15 +869,14 @@ return Quarrel
 --- >bash
 ---     nvim --clean -u scripts/repro.lua
 --- <
----
 --- If the issue persists in the minimal environment, please report it at:
 ---     https://codeberg.org/yilisharcs/quarrel.nvim/issues
 
 ---@toc_entry SIMILAR PLUGINS
 ---@tag Quarrel-similar-plugins
 ---@text
---- - [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon)
---- - [nvim-mini/mini.visits](https://github.com/nvim-mini/mini.visits)
+---     - [ThePrimeagen/harpoon](https://github.com/ThePrimeagen/harpoon)
+---     - [nvim-mini/mini.visits](https://github.com/nvim-mini/mini.visits)
 
 -- NOTE: this modeline automatically formats docstrings for mini.doc
 -- vim: textwidth=82
