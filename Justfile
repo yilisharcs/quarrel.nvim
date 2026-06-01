@@ -9,7 +9,9 @@ repro:
 
 check: lint format
 
+[script]
 lint:
+        $env.VIMRUNTIME = (nvim --clean --headless -c 'lua io.stdout:write(vim.env.VIMRUNTIME)' -c 'q')
         lua-language-server --check . --checklevel=Hint
 
 format:
