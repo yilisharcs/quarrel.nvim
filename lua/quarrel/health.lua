@@ -23,7 +23,7 @@ function Health.check()
         end
 
         -- check configuration
-        local config_ok, err = pcall(Quarrel._validate_config, vim.g.quarrel)
+        local config_ok, err = pcall(Quarrel.__INTERNAL_H.validate_config, vim.g.quarrel)
         if not config_ok then
                 error(("Invalid configuration: %s"):format(err))
         else

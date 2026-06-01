@@ -481,7 +481,7 @@ H.is_notify_hijacked = nil
 ---
 ---@return quarrel.Config # Validated and merged configuration.
 function H.setup_config(config)
-        Quarrel._validate_config(config)
+        H.validate_config(config)
 
         -- stylua: ignore
         local merged = vim.tbl_deep_extend(
@@ -494,11 +494,8 @@ function H.setup_config(config)
 end
 
 ---@private
---- This function is exposed so it can be reused by `health.lua`.
---- It is not intended to be used as part of the plugin API.
----
 ---@param config quarrel.Opts? Raw configuration table.
-function Quarrel._validate_config(config)
+function H.validate_config(config)
         vim.validate("config", config, "table", true)
         local c = config or {}
 
@@ -841,6 +838,17 @@ end
 function H.argadd(path)
         vim.cmd("$argadd " .. vim.fn.fnameescape(path))
 end
+
+-- expose internal access for Busted and :checkhealth
+setmetatable(Quarrel, {
+        __index = function(_, key)
+                if key == "__INTERNAL_H" then
+                        return H
+                end
+        end,
+        -- block set and get metatable
+        __metatable = "INTERNAL",
+})
 
 return Quarrel
 
