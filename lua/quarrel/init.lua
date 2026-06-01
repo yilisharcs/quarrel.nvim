@@ -68,8 +68,8 @@
 --- # Setup ~
 ---
 --- This plugin works out of the box via 'runtimepath'. It can be configured with
---- `vim.g.quarrel` in `init.lua`, and provides a global Lua table for scripting. You
---- can call `require("quarrel").setup()` to refresh all internal side-effects.
+--- `vim.g.quarrel` before the plugin is loaded, and provides a global Lua table for
+--- scripting. Call `Quarrel.setup()` to refresh all internal side-effects.
 ---
 --- See |Quarrel-configuration| for `config` structure and default values.
 ---
