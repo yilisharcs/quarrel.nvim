@@ -696,12 +696,20 @@ function H.write_db_file(path, data)
                 return
         end
 
-        local fp = io.open(path, "wb")
+        local tmp_path = path .. ".tmp"
+        local fp = io.open(tmp_path, "wb")
         if not fp then
                 return
         end
         fp:write(packed)
         fp:close()
+
+        -- replace the database file atomically; if the
+        -- swap fails, the original file is preserved.
+        local success, _err = vim.uv.fs_rename(tmp_path, path)
+        if not success then
+                os.remove(tmp_path)
+        end
 end
 
 ---@private
