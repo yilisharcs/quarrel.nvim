@@ -204,7 +204,7 @@ Add a file to the arglist.
 
 Normalizes the provided {path} to an absolute string before adding it to the
 end of the arglist. If no {path} is provided, the result of |expand|("%:p") is
-used. The resulting list is then deduplicated with |:argdedup| and cached.
+used. The resulting list is then deduplicated and cached.
 
 Parameters ~
 {path} `(string?)` Absolute path to add. Defaults to current file.

@@ -221,25 +221,8 @@ function Quarrel.write_cache()
                 return
         end
 
-        -- no existing history for cwd? create a fallback table
-        local history = Quarrel.cache.db.data[cwd] or { index = 0, entries = {} }
-        local normalized = vim.iter(vim.fn.argv()):map(H.is_eligible):totable()
-
-        -- avoid creating empty histories for empty projects
-        if #normalized == 0 and #history.entries == 0 then
-                return
-        end
-
-        -- in-place edit: overwrite current index, never increment
-        if history.index > 0 then
-                if not vim.deep_equal(normalized, history.entries[history.index]) then
-                        history.entries[history.index] = normalized
-                end
-        else
-                table.insert(history.entries, normalized)
-                history.index = 1
-                Quarrel.cache.db.data[cwd] = history
-        end
+        local argv = vim.fn.argv() --[[@as string[] ]]
+        H.update_history(cwd, argv, "overwrite")
 end
 
 --- Write the in-memory cache to the database file.
@@ -269,7 +252,8 @@ function Quarrel.read()
         end
 
         local history = Quarrel.cache.db.data[cwd]
-        local arglist = (history and history.entries[history.index]) or {}
+        local raw_list = (history and history.entries[history.index]) or {}
+        local arglist = vim.iter(raw_list):map(H.is_eligible):totable()
         H.set_arglist(arglist)
 
         if #arglist > 0 then
@@ -281,16 +265,27 @@ end
 ---
 --- Normalizes the provided {path} to an absolute string before adding it to the
 --- end of the arglist. If no {path} is provided, the result of |expand|("%:p") is
---- used. The resulting list is then deduplicated with |:argdedup| and cached.
+--- used. The resulting list is then deduplicated and cached.
 ---
 ---@param path string? Absolute path to add. Defaults to current file.
 function Quarrel.add(path)
         if H.is_disabled() then
                 return
         end
-        vim.iter({ path or vim.fn.expand("%:p") }):map(H.is_eligible):each(H.argadd)
-        vim.cmd.argdedup()
-        Quarrel.write_cache()
+
+        local cwd = vim.uv.cwd()
+        if not cwd then
+                return
+        end
+
+        local argv = vim.fn.argv() --[[@as string[] ]]
+        table.insert(argv, path or vim.fn.expand("%:p"))
+
+        local clean = H.update_history(cwd, argv, "overwrite")
+        if clean then
+                H.set_arglist(clean)
+        end
+
         H.notify()
 end
 
@@ -387,14 +382,10 @@ function Quarrel.edit()
                 callback = function()
                         local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
-                        local arglist = vim.iter(lines)
-                                :map(function(line)
-                                        return H.is_eligible(vim.trim(line))
-                                end)
-                                :totable()
-
-                        H.set_arglist(arglist)
-                        Quarrel.write_cache()
+                        local clean = H.update_history(cwd, lines, "overwrite")
+                        if clean then
+                                H.set_arglist(clean)
+                        end
 
                         vim.api.nvim_set_option_value("modified", false, { buf = buf })
                 end,
@@ -754,7 +745,7 @@ function H.set_arglist(files)
         -- always clear the list
         vim.cmd("%argdelete")
 
-        vim.iter(files):map(H.is_eligible):each(H.argadd)
+        vim.iter(files):each(H.argadd)
 end
 
 ---@private
@@ -774,22 +765,10 @@ function H.init_arglist()
                 return
         end
 
-        local history = Quarrel.cache.db.data[cwd] or { index = 0, entries = {} }
-
-        -- n+1 rule: only append if different from the current indexed entry
-        if not vim.deep_equal(argf_no_dir, history.entries[history.index]) then
-                table.insert(history.entries, argf_no_dir)
-                history.index = #history.entries
-
-                local hist_level = H.get_config().hist_level
-                if #history.entries > hist_level then
-                        table.remove(history.entries, 1)
-                        history.index = #history.entries
-                end
-                Quarrel.cache.db.data[cwd] = history
+        local clean = H.update_history(cwd, argf_no_dir, "append")
+        if clean then
+                H.set_arglist(clean)
         end
-
-        H.set_arglist(argf_no_dir)
 end
 
 ---@private
@@ -837,6 +816,55 @@ end
 ---@param path string Absolute path to add.
 function H.argadd(path)
         vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+end
+
+---@private
+--- Update the history for a project.
+---
+---@param key string Database key (directory path).
+---@param files string[] List of files to store.
+---@param mode "overwrite"|"append" Update mode.
+---
+---@return string[]? # The normalized list of files, or nil if no update occurred.
+function H.update_history(key, files, mode)
+        local history = Quarrel.cache.db.data[key] or { index = 0, entries = {} }
+        -- stylua: ignore
+        local normalized = vim.iter(files)
+                :map(H.is_eligible)
+                -- ":argdedup" happens here
+                :unique()
+                :totable()
+
+        -- avoid creating empty histories for empty projects
+        if #normalized == 0 and #history.entries == 0 then
+                return nil
+        end
+
+        -- change detection: avoid redundant snapshots
+        if history.index > 0 and vim.deep_equal(normalized, history.entries[history.index]) then
+                return normalized
+        end
+
+        if mode == "overwrite" and history.index > 0 then
+                -- session update: replace current snapshot
+                history.entries[history.index] = normalized
+        elseif mode == "append" or (mode == "overwrite" and history.index == 0) then
+                -- checkpoint update: create new snapshot
+                table.insert(history.entries, normalized)
+                history.index = #history.entries
+
+                -- enforce history limit
+                local hist_level = H.get_config().hist_level
+                if #history.entries > hist_level then
+                        table.remove(history.entries, 1)
+                        history.index = #history.entries
+                end
+        else
+                error(("Invalid update mode %q (expected 'overwrite' or 'append')"):format(mode))
+        end
+
+        Quarrel.cache.db.data[key] = history
+        return normalized
 end
 
 -- expose internal access for Busted and :checkhealth
