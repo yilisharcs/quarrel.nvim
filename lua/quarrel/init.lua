@@ -268,21 +268,13 @@ function Quarrel.read()
                 return
         end
 
-        -- always clear the list
-        vim.cmd("%argdelete")
-
         local history = Quarrel.cache.db.data[cwd]
-        if not history or #history.entries == 0 then
-                return
-        end
+        local arglist = (history and history.entries[history.index]) or {}
+        H.set_arglist(arglist)
 
-        local arglist = history.entries[history.index]
-        if not arglist or #arglist == 0 then
-                return
+        if #arglist > 0 then
+                H.notify()
         end
-
-        vim.iter(arglist):map(H.is_eligible):each(H.argadd)
-        H.notify()
 end
 
 --- Add a file to the arglist.
@@ -401,9 +393,7 @@ function Quarrel.edit()
                                 end)
                                 :totable()
 
-                        -- always clear the list
-                        vim.cmd("%argdelete")
-                        vim.iter(arglist):each(H.argadd)
+                        H.set_arglist(arglist)
                         Quarrel.write_cache()
 
                         vim.api.nvim_set_option_value("modified", false, { buf = buf })
@@ -757,6 +747,17 @@ function H.read_db_file(path)
 end
 
 ---@private
+--- Synchronize the arglist with a list of files.
+---
+---@param files string[] List of absolute paths.
+function H.set_arglist(files)
+        -- always clear the list
+        vim.cmd("%argdelete")
+
+        vim.iter(files):map(H.is_eligible):each(H.argadd)
+end
+
+---@private
 --- Initialize arglist from startup arguments or database.
 ---
 --- Filters out any arguments that evaluate to a directory.
@@ -772,6 +773,7 @@ function H.init_arglist()
         if not cwd then
                 return
         end
+
         local history = Quarrel.cache.db.data[cwd] or { index = 0, entries = {} }
 
         -- n+1 rule: only append if different from the current indexed entry
@@ -787,9 +789,7 @@ function H.init_arglist()
                 Quarrel.cache.db.data[cwd] = history
         end
 
-        -- always clear the list
-        vim.cmd("%argdelete")
-        vim.iter(argf_no_dir):each(H.argadd)
+        H.set_arglist(argf_no_dir)
 end
 
 ---@private
