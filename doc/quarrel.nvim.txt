@@ -17,8 +17,8 @@ Apache License 2.0 Copyright (c) 2025-2026 yilisharcs
 *quarrel.nvim* intends to fix a persistent issue in file navigation: alternate
 buffers can't cope with multiple files and global marks are neither unlimited
 nor project-local. This plugin leverages the built-in |arglist| to automatically
-manage these multiple files. Whenever you change directories, it'll save the
-arglist of the previous directory and load the next one's.
+manage these multiple files. Whenever you change directories or vcs branches,
+it'll save the arglist of the previous directory and load the next one's.
 
 # Design ~
 
@@ -102,6 +102,16 @@ Fields ~
 {hist_level} `(number)` Number of history entries to keep per project.
     Default: `3`
 
+{use_vcs} `(boolean)` Use version control state to manage isolated arglists.
+    Switching branches will automatically switch the active arglist stack.
+    [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
+
+    Supported:
+            - git
+            - jujutsu
+
+    Default: `false`
+
 {notify} `(boolean)` Whether to automatically echo the arglist on changes.
     Default: `false`
 
@@ -134,6 +144,7 @@ Usage ~
             database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
             hist_level = 10,
             notify = true,
+            use_vcs = true,
             mappings = {
                     add = "<leader>qa",
                     edit = "<leader>qe",
@@ -174,8 +185,8 @@ Write current arglist to the in-memory cache.
 
 Under normal operation, this is handled with |DirChangedPre| (on |:chdir|) and
 |VimLeavePre| (on |:quit|) |autocommand|s. Call this manually to commit the active
-arglist to the session state without touching the disk. Changes are appended to
-the history for the current project.
+arglist to the session state without touching the disk. Updates the active
+snapshot to match the current arglist.
 
 ------------------------------------------------------------------------------
                                                             *Quarrel.write_db()*

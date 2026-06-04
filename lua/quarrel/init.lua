@@ -13,8 +13,8 @@
 --- *quarrel.nvim* intends to fix a persistent issue in file navigation: alternate
 --- buffers can't cope with multiple files and global marks are neither unlimited
 --- nor project-local. This plugin leverages the built-in |arglist| to automatically
---- manage these multiple files. Whenever you change directories, it'll save the
---- arglist of the previous directory and load the next one's.
+--- manage these multiple files. Whenever you change directories or vcs branches,
+--- it'll save the arglist of the previous directory and load the next one's.
 ---
 --- # Design ~
 ---
@@ -103,6 +103,16 @@ local H = {}
 ---@field hist_level number Number of history entries to keep per project.
 ---     Default: `3`
 ---
+---@field use_vcs boolean Use version control state to manage isolated arglists.
+---     Switching branches will automatically switch the active arglist stack.
+---     [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
+---
+---     Supported:
+---             - git
+---             - jujutsu
+---
+---     Default: `false`
+---
 ---@field notify boolean Whether to automatically echo the arglist on changes.
 ---     Default: `false`
 ---
@@ -115,6 +125,7 @@ local H = {}
 ---             database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
 ---             hist_level = 10,
 ---             notify = true,
+---             use_vcs = true,
 ---             mappings = {
 ---                     add = "<leader>qa",
 ---                     edit = "<leader>qe",
@@ -148,6 +159,7 @@ local H = {}
 Quarrel.config = {
         database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
         hist_level = 3,
+        use_vcs = false,
         notify = false,
         mappings = {
                 add = "<leader>a",
@@ -209,8 +221,8 @@ end
 ---
 --- Under normal operation, this is handled with |DirChangedPre| (on |:chdir|) and
 --- |VimLeavePre| (on |:quit|) |autocommand|s. Call this manually to commit the active
---- arglist to the session state without touching the disk. Changes are appended to
---- the history for the current project.
+--- arglist to the session state without touching the disk. Updates the active
+--- snapshot to match the current arglist.
 function Quarrel.write_cache()
         if H.is_disabled() then
                 return
@@ -221,8 +233,9 @@ function Quarrel.write_cache()
                 return
         end
 
+        local key = H.get_active_key(cwd)
         local argv = vim.fn.argv() --[[@as string[] ]]
-        H.update_history(cwd, argv, "overwrite")
+        H.update_history(key, argv, "overwrite")
 end
 
 --- Write the in-memory cache to the database file.
@@ -251,7 +264,15 @@ function Quarrel.read()
                 return
         end
 
-        local history = Quarrel.cache.db.data[cwd]
+        local key = H.get_active_key(cwd)
+        local history = Quarrel.cache.db.data[key]
+
+        -- if on a new branch, inherit from base cwd
+        local base_cwd = not history and key:match("^(.-)%z")
+        if base_cwd then
+                history = Quarrel.cache.db.data[base_cwd]
+        end
+
         local raw_list = (history and history.entries[history.index]) or {}
         local arglist = vim.iter(raw_list):map(H.is_eligible):totable()
         H.set_arglist(arglist)
@@ -281,7 +302,8 @@ function Quarrel.add(path)
         local argv = vim.fn.argv() --[[@as string[] ]]
         table.insert(argv, path or vim.fn.expand("%:p"))
 
-        local clean = H.update_history(cwd, argv, "overwrite")
+        local key = H.get_active_key(cwd)
+        local clean = H.update_history(key, argv, "overwrite")
         if clean then
                 H.set_arglist(clean)
         end
@@ -382,7 +404,8 @@ function Quarrel.edit()
                 callback = function()
                         local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
-                        local clean = H.update_history(cwd, lines, "overwrite")
+                        local key = H.get_active_key(cwd)
+                        local clean = H.update_history(key, lines, "overwrite")
                         if clean then
                                 H.set_arglist(clean)
                         end
@@ -482,6 +505,7 @@ function H.validate_config(config)
 
         vim.validate("database", c.database, "string", true)
         vim.validate("hist_level", c.hist_level, "number", true)
+        vim.validate("use_vcs", c.use_vcs, "boolean", true)
         vim.validate("notify", c.notify, "boolean", true)
         vim.validate("mappings", c.mappings, "table", true)
 
@@ -756,6 +780,134 @@ function H.read_db_file(path)
 end
 
 ---@private
+--- Get the current VCS scope. [EXPERIMENTAL]
+---
+--- VCS identifiers (such as branches or bookmarks) define the active history
+--- stack and serve as the isolation suffix for the project's database key.
+--- If no context is detected, the project's base key is used as a fallback;
+--- new contexts automatically inherit history from this state.
+---
+---@param cwd string Project directory.
+---
+---@return string? # The scope name, or nil if none found.
+function H.get_current_scope(cwd)
+        local scope
+        if not H.get_config().use_vcs then
+                goto finalize
+        else
+                goto jujutsu
+        end
+
+        ::jujutsu::
+        -- 1. nearest ancestor bookmark: any commit descending from a bookmark
+        --    inherits its context until a newer bookmark is encountered.
+        -- 2. stable change ID: for anonymous work, uses the immutable change ID
+        --    to associate the arglist with the current logical task.
+        do
+                if
+                        vim.fn.executable("jj") == 0
+                        or vim.fn.isdirectory(vim.fs.joinpath(cwd, ".jj")) == 0
+                then
+                        goto git
+                end
+
+                -- stylua: ignore
+                local bookmarks_obj = vim.system({
+                        "jj", "log",
+                        "-r", "heads(ancestors(@) & (bookmarks() | remote_bookmarks()))",
+                        "-T", 'bookmarks.join(" ")',
+                        -- strip any pesky ANSI sequences
+                        "--color=never", "--no-graph",
+                }, { text = true, cwd = cwd }):wait()
+
+                if bookmarks_obj.code == 0 and bookmarks_obj.stdout ~= "" then
+                        local bookmarks = vim.trim(bookmarks_obj.stdout)
+                        -- pick first bookmark from one or many
+                        -- strip "at" marker (*) and remote suffixes (@)
+                        scope = bookmarks:match("^(%S+)")
+                        scope = scope:gsub("%*$", ""):gsub("@%S+$", "")
+                        goto finalize
+                end
+
+                -- stylua: ignore
+                local change_id_obj = vim.system({
+                        "jj", "log",
+                        "-r", "@",
+                        "-T", "change_id.shortest(8)",
+                        -- strip any pesky ANSI sequences
+                        "--color=never", "--no-graph",
+                }, { text = true, cwd = cwd }):wait()
+
+                if change_id_obj.code == 0 and change_id_obj.stdout ~= "" then
+                        scope = vim.trim(change_id_obj.stdout)
+                end
+
+                -- project is managed by jujutsu.
+                -- do not fallback to git.
+                goto finalize
+        end
+
+        ::git::
+        -- 1. branch name: maps arglists to the active tracking branch.
+        -- 2. short SHA: provides isolation for detached HEAD states.
+        do
+                if vim.fn.executable("git") == 0 then
+                        goto finalize
+                end
+
+                -- stylua: ignore
+                local branch_obj = vim.system({
+                        -- strip any pesky ANSI color sequences
+                        -- (git is shy, but you never know...)
+                        "git", "-c", "color.ui=never",
+                        "branch", "--show-current",
+                }, { text = true, cwd = cwd }):wait()
+
+                if branch_obj.code == 0 and branch_obj.stdout ~= "" then
+                        local branch = vim.trim(branch_obj.stdout)
+                        if branch ~= "" then
+                                scope = branch
+                                goto finalize
+                        end
+                end
+
+                -- stylua: ignore
+                local sha_obj = vim.system({
+                        -- strip any pesky ANSI color sequences
+                        -- (git is shy, but you never know...)
+                        "git", "-c", "color.ui=never",
+                        "rev-parse", "--short", "HEAD",
+                }, { text = true, cwd = cwd }):wait()
+
+                if sha_obj.code == 0 and sha_obj.stdout ~= "" then
+                        local sha = vim.trim(sha_obj.stdout)
+                        if sha ~= "" then
+                                scope = sha
+                        end
+                end
+
+                -- project is managed by git.
+                -- do not fallback to ... what?
+                goto finalize
+        end
+
+        ::finalize::
+
+        return (scope and scope ~= "") and scope or nil
+end
+
+---@private
+--- Get the active database key for the current directory.
+---
+---@param cwd string Absolute path to the directory.
+---
+---@return string # The resolved key (plain cwd or vcs composite).
+function H.get_active_key(cwd)
+        local scope = H.get_current_scope(cwd)
+        return scope and (cwd .. "\0" .. scope) or cwd
+end
+
+---@private
 --- Synchronize the arglist with a list of files.
 ---
 ---@param files string[] List of absolute paths.
@@ -783,7 +935,8 @@ function H.init_arglist()
                 return
         end
 
-        local clean = H.update_history(cwd, argf_no_dir, "append")
+        local key = H.get_active_key(cwd)
+        local clean = H.update_history(key, argf_no_dir, "append")
         if clean then
                 H.set_arglist(clean)
         end
@@ -882,6 +1035,13 @@ function H.update_history(key, files, mode)
         end
 
         Quarrel.cache.db.data[key] = history
+
+        -- if it's a composite key, update base_cwd for backwards compatibility
+        local base_cwd = key:match("^(.-)%z")
+        if base_cwd then
+                Quarrel.cache.db.data[base_cwd] = history
+        end
+
         return normalized
 end
 

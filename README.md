@@ -28,8 +28,8 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 _quarrel.nvim_ intends to fix a persistent issue in file navigation: alternate
 buffers can't cope with multiple files and global marks are neither unlimited
 nor project-local. This plugin leverages the built-in `arglist` to automatically
-manage these multiple files. Whenever you change directories, it'll save the
-arglist of the previous directory and load the next one's.
+manage these multiple files. Whenever you change directories or vcs branches,
+it'll save the arglist of the previous directory and load the next one's.
 
 ### Design
 
@@ -110,6 +110,14 @@ vim.g.quarrel = {
         database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
         -- Number of history entries to keep per project.
         hist_level = 3,
+        -- Use version control state to manage isolated arglists.
+        -- Switching branches will automatically switch the active arglist stack.
+        -- [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
+        -- 
+        -- Supported:
+        --         - git
+        --         - jujutsu
+        use_vcs = false,
         -- Whether to automatically echo the arglist on changes.
         notify = false,
         -- Module mappings. Use '' (empty string) to disable one.

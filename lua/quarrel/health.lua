@@ -155,10 +155,16 @@ function Health.check()
                 if has_auto_root and #auto_root_cmds > 0 then
                         ok("`setup_auto_root()` is active.")
                 elseif type(mini_misc.setup_auto_root) == "function" then
-                        warn(
-                                "`setup_auto_root()` is inactive.",
-                                'Enable with `require("mini.misc").setup_auto_root()`'
-                        )
+                        local msg = "`setup_auto_root()` is inactive."
+                        local fix = 'Enable with `require("mini.misc").setup_auto_root({`'
+                                .. '\n`     ".git",`'
+                                .. '\n`     ".jj",`'
+                                .. "\n`})`"
+
+                        if Quarrel.config.use_vcs then
+                                msg = msg .. " Recommended for consistent branch isolation."
+                        end
+                        warn(msg, fix)
                 end
 
                 local has_restore_cursor, restore_cursor_cmds =
