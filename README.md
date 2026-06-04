@@ -106,33 +106,33 @@ To disable core functionality, set `vim.g.quarrel_disable` (globally) to `true`.
 ```lua
 ---@type quarrel.Opts
 vim.g.quarrel = {
-    -- Path to the database file where arglists are stored.
-    database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
-    -- Number of history entries to keep per project.
-    hist_level = 3,
-    -- Whether to automatically echo the arglist on changes.
-    notify = false,
-    -- Module mappings. Use '' (empty string) to disable one.
-    mappings = {
-        -- Add current file to arglist.
-        add = "<leader>a",
-        -- Edit the arglist.
-        edit = "<leader>e",
-        -- Go to older arglist.
-        older = "<leader>[",
-        -- Go to newer arglist.
-        newer = "<leader>]",
-        -- Go to arg file 1.
-        arg1 = "<leader>h",
-        -- Go to arg file 2.
-        arg2 = "<leader>j",
-        -- Go to arg file 3.
-        arg3 = "<leader>k",
-        -- Go to arg file 4.
-        arg4 = "<leader>l",
-        -- Go to arg file 5.
-        arg5 = "<leader>;",
-    },
+        -- Path to the database file where arglists are stored.
+        database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
+        -- Number of history entries to keep per project.
+        hist_level = 3,
+        -- Whether to automatically echo the arglist on changes.
+        notify = false,
+        -- Module mappings. Use '' (empty string) to disable one.
+        mappings = {
+                -- Add current file to arglist.
+                add = "<leader>a",
+                -- Edit the arglist.
+                edit = "<leader>e",
+                -- Go to older arglist.
+                older = "<leader>[",
+                -- Go to newer arglist.
+                newer = "<leader>]",
+                -- Go to arg file 1.
+                arg1 = "<leader>h",
+                -- Go to arg file 2.
+                arg2 = "<leader>j",
+                -- Go to arg file 3.
+                arg3 = "<leader>k",
+                -- Go to arg file 4.
+                arg4 = "<leader>l",
+                -- Go to arg file 5.
+                arg5 = "<leader>;",
+        },
 }
 ```
 

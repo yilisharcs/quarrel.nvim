@@ -60,7 +60,9 @@ H.synthesize_lua_table = function(doc, fields, indent_level)
         local indent = string.rep(" ", indent_level)
 
         for _, f in ipairs(fields) do
-                table.insert(lines, indent .. "-- " .. f.desc)
+                -- apply indentation and comment prefix to each line of the description
+                local desc = f.desc:gsub("\n", "\n" .. indent .. "-- ")
+                table.insert(lines, indent .. "-- " .. desc)
 
                 if f.type:match("^quarrel%.") then
                         local sub_block = H.find_block_by_class(doc, f.type)
@@ -68,7 +70,7 @@ H.synthesize_lua_table = function(doc, fields, indent_level)
                                 local sub_fields = H.parse_fields(sub_block)
                                 table.insert(lines, indent .. f.name .. " = {")
                                 local sub_lines =
-                                        H.synthesize_lua_table(doc, sub_fields, indent_level + 4)
+                                        H.synthesize_lua_table(doc, sub_fields, indent_level + 8)
                                 vim.list_extend(lines, sub_lines)
                                 table.insert(lines, indent .. "},")
                         else
@@ -102,7 +104,7 @@ H.parse_fields = function(block)
                         end
                 end
 
-                local full_text = table.concat(lines, " "):gsub("%s+", " ")
+                local full_text = table.concat(lines, "\n")
                 full_text = vim.trim(full_text)
 
                 -- handle mini.doc transformations: {name} -> name, `(type)` -> type
@@ -110,9 +112,19 @@ H.parse_fields = function(block)
                 full_text = full_text:gsub("`%(?(%S-)%)?` ", "%1 ")
 
                 -- match: name type description...
-                local name, type_str, rest = full_text:match("^(%S+)%s+(%S+)%s*(.*)$")
+                local name, type_str, rest = full_text:match("^(%S+)%s+(%S+)%s*([\1-\255]*)$")
                 if name then
-                        local desc = rest:match("(.-)%s*Default:") or rest
+                        local desc = rest:match("^([\1-\255]-)%s*Default:") or rest
+
+                        -- dedent by 4 spaces
+                        desc = desc:gsub("\n    ", "\n")
+
+                        -- join lines that are continuations of a sentence while preserving
+                        -- the structure of lists and paragraphs. a line is a continuation
+                        -- if the previous line doesn't end in punctuation and the current
+                        -- line doesn't start with a list marker or whitespace.
+                        desc = desc:gsub("([^\n%.%?!:])\n([^-%*%+%s])", "%1 %2")
+
                         local default = rest:match("Default:%s*(.*)$")
                         if default then
                                 -- strip backticks from default value
@@ -229,7 +241,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                 }
 
                 -- reassemble configuration documentation from ordered field objects
-                local synthesized = H.synthesize_lua_table(doc, cfg_fields, 8)
+                local synthesized = H.synthesize_lua_table(doc, cfg_fields, 12)
                 vim.list_extend(lines, synthesized)
                 table.insert(lines, "}")
 
