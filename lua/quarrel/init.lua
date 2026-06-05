@@ -259,20 +259,7 @@ function Quarrel.read()
                 return
         end
 
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return
-        end
-
-        local key = H.get_active_key(cwd)
-        local history = Quarrel.cache.db.data[key]
-
-        -- if on a new branch, inherit from base cwd
-        local base_cwd = not history and key:match("^(.-)%z")
-        if base_cwd then
-                history = Quarrel.cache.db.data[base_cwd]
-        end
-
+        local history, _ = H.get_history_context()
         local raw_list = (history and history.entries[history.index]) or {}
         local arglist = vim.iter(raw_list):map(H.is_eligible):totable()
         H.set_arglist(arglist)
@@ -330,9 +317,8 @@ function Quarrel.older()
                 return
         end
 
-        local cwd = vim.uv.cwd()
-        local history = cwd and Quarrel.cache.db.data[cwd]
-        if not history then
+        local history, cwd = H.get_history_context()
+        if not history or not cwd then
                 return
         end
 
@@ -349,9 +335,8 @@ function Quarrel.newer()
                 return
         end
 
-        local cwd = vim.uv.cwd()
-        local history = cwd and Quarrel.cache.db.data[cwd]
-        if not history then
+        local history, cwd = H.get_history_context()
+        if not history or not cwd then
                 return
         end
 
@@ -908,6 +893,28 @@ function H.get_active_key(cwd)
 end
 
 ---@private
+--- Resolve the history, active key, and directory for the current project.
+---
+---@return quarrel.History?, string? # history, cwd.
+function H.get_history_context()
+        local cwd = vim.uv.cwd()
+        if not cwd then
+                return nil, nil
+        end
+
+        local key = H.get_active_key(cwd)
+        local history = Quarrel.cache.db.data[key]
+
+        -- if on a new branch, inherit from base cwd
+        local base_cwd = not history and key:match("^(.-)%z")
+        if base_cwd then
+                history = Quarrel.cache.db.data[base_cwd]
+        end
+
+        return history, cwd
+end
+
+---@private
 --- Synchronize the arglist with a list of files.
 ---
 ---@param files string[] List of absolute paths.
@@ -1039,7 +1046,7 @@ function H.update_history(key, files, mode)
         -- if it's a composite key, update base_cwd for backwards compatibility
         local base_cwd = key:match("^(.-)%z")
         if base_cwd then
-                Quarrel.cache.db.data[base_cwd] = history
+                H.update_history(base_cwd, normalized, mode)
         end
 
         return normalized
