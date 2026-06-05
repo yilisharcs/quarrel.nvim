@@ -693,12 +693,22 @@ function H.write_db_file(path, data)
         --       believe that it's better to be safe than sorry.
         local ok, packed = pcall(vim.mpack.encode, data)
         if not ok then
+                vim.notify(
+                        "quarrel: could not serialize database",
+                        vim.log.levels.WARN,
+                        { title = "quarrel" }
+                )
                 return
         end
 
         local tmp_path = path .. ".tmp"
         local fp = io.open(tmp_path, "wb")
         if not fp then
+                vim.notify(
+                        "quarrel: could not open temporary file for writing",
+                        vim.log.levels.WARN,
+                        { title = "quarrel" }
+                )
                 return
         end
         fp:write(packed)
