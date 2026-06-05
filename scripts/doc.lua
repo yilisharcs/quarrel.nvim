@@ -492,7 +492,7 @@ readme_hooks.doc = function(doc)
                 file:remove(to_remove[i])
         end
 
-        -- remove `quarrel.Setup` class bloc
+        -- remove `quarrel.Setup` class block
         for i = #file, 1, -1 do
                 if
                         file[i]:has_descendant(function(s)
