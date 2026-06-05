@@ -632,14 +632,6 @@ readme_hooks.write_pre = function(lines)
                         line = line:gsub("%[|MiniMisc|%]", "[MiniMisc]")
                         line = line:gsub("|:checkhealth| `quarrel` ", "`:checkhealth quarrel` ")
                         line = line:gsub("|([^|]+)|", "`%1`")
-
-                        -- lines starting with "`" are wrapped
-                        -- incorrectly on GitHub... i think...
-                        if line:match("^`%S") then
-                                if #res > 0 and res[#res] ~= "" and not res[#res]:match("\\$") then
-                                        res[#res] = res[#res] .. " \\"
-                                end
-                        end
                 end
                 table.insert(res, line)
 

@@ -53,7 +53,7 @@ instances writing to the database; the last writer wins.
 
 This diverged from the original goal. This plugin handles neither remembering
 the cursor position nor automatically changing directories with heuristics; I
-recommend using [MiniMisc](https://github.com/nvim-mini/mini.misc) with \
+recommend using [MiniMisc](https://github.com/nvim-mini/mini.misc) with
 `setup_auto_root()` and `setup_restore_cursor()` enabled for that. This plugin
 does not external track file changes to update the arglist; I recommend using
 [yazi.nvim](https://github.com/mikavilpas/yazi.nvim) for that. This plugin
@@ -84,7 +84,7 @@ will remain minimal.
 
 ### Setup
 
-This plugin works out of the box via 'runtimepath'. It can be configured with \
+This plugin works out of the box via 'runtimepath'. It can be configured with
 `vim.g.quarrel` before the plugin is loaded, and provides a global Lua table for
 scripting. Call `Quarrel.setup()` to refresh all internal side-effects.
 
