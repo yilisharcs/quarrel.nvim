@@ -110,37 +110,38 @@ function Health.check()
                         name:sub(2)
                 )
 
-                if not vim.tbl_isempty(map) and map.rhs ~= expected_rhs then
-                        local source = "Unknown"
-                        if map.sid > 0 then
-                                local script = vim.fn.getscriptinfo({ sid = map.sid })
-                                if script and script[1] then
-                                        source = script[1].name
-                                        if map.lnum > 0 then
-                                                source = ("%s:%d"):format(source, map.lnum)
-                                        end
+                if vim.tbl_isempty(map) or map.rhs == expected_rhs then
+                        ok(("`%s`"):format(lhs))
+                        goto next_mapping
+                end
+
+                local source = "Unknown"
+                if map.sid > 0 then
+                        local script = vim.fn.getscriptinfo({ sid = map.sid })
+                        if script and script[1] then
+                                source = script[1].name
+                                if map.lnum > 0 then
+                                        source = ("%s:%d"):format(source, map.lnum)
                                 end
                         end
-
-                        local msg = ("Key `%s` is overwritten"):format(lhs)
-                        if map.desc and map.desc ~= "" then
-                                msg = ("%s (%s)"):format(msg, map.desc)
-                        end
-
-                        local details = ("RHS: `%s`"):format(
-                                (map.rhs ~= "" and map.rhs or "Lua function")
-                        )
-                        if map.buffer ~= 0 then
-                                source = ("Buffer-local (%d)"):format(map.buffer)
-                        end
-                        if source ~= "Unknown" then
-                                details = ("%s\nSRC: `%s`"):format(details, source)
-                        end
-
-                        warn(msg, details)
-                else
-                        ok(("`%s`"):format(lhs))
                 end
+
+                local msg = ("Key `%s` is overwritten"):format(lhs)
+                if map.desc and map.desc ~= "" then
+                        msg = ("%s (%s)"):format(msg, map.desc)
+                end
+
+                local details = ("RHS: `%s`"):format((map.rhs ~= "" and map.rhs or "Lua function"))
+                if map.buffer ~= 0 then
+                        source = ("Buffer-local (%d)"):format(map.buffer)
+                end
+                if source ~= "Unknown" then
+                        details = ("%s\nSRC: `%s`"):format(details, source)
+                end
+
+                warn(msg, details)
+
+                ::next_mapping::
         end
 
         -- check dependencies
