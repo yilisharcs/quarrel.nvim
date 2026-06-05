@@ -522,7 +522,7 @@ readme_hooks.write_pre = function(lines)
                 "",
                 "```lua",
                 "vim.pack.add({",
-                H.s8 .. 'src = "https://github.com/yilisharcs/quarrel.nvim",',
+                H.s8 .. 'src = "https://codeberg.org/yilisharcs/quarrel.nvim",',
                 "})",
                 "```",
                 "",
@@ -570,7 +570,7 @@ readme_hooks.write_pre = function(lines)
                         end
                 end
 
-                if line:match("^%s+https://github.com/yilisharcs/quarrel.nvim/issues$") then
+                if line:match("^%s+https://codeberg.org/yilisharcs/quarrel.nvim/issues$") then
                         table.insert(res, "")
                         table.insert(res, vim.trim(line))
                         goto next_line
