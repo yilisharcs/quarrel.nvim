@@ -55,9 +55,8 @@ H.find_block_by_class = function(doc, class_name)
 end
 
 --- Recursively synthesize a Lua table from field definitions.
-H.synthesize_lua_table = function(doc, fields, indent_level)
+H.synthesize_lua_table = function(doc, fields, indent)
         local lines = {}
-        local indent = string.rep(" ", indent_level)
 
         for _, f in ipairs(fields) do
                 -- apply indentation and comment prefix to each line of the description
@@ -70,7 +69,7 @@ H.synthesize_lua_table = function(doc, fields, indent_level)
                                 local sub_fields = H.parse_fields(sub_block)
                                 table.insert(lines, indent .. f.name .. " = {")
                                 local sub_lines =
-                                        H.synthesize_lua_table(doc, sub_fields, indent_level + 8)
+                                        H.synthesize_lua_table(doc, sub_fields, indent .. H.s8)
                                 vim.list_extend(lines, sub_lines)
                                 table.insert(lines, indent .. "},")
                         else
@@ -241,7 +240,9 @@ H.prepare_doc_tree = function(doc, is_readme)
                 }
 
                 -- reassemble configuration documentation from ordered field objects
-                local synthesized = H.synthesize_lua_table(doc, cfg_fields, 12)
+                -- NOTE: H.s4 offsets mini.doc's default 4-space code block indent so that
+                --       after write_pre strips it, the remaining body indent matches H.s8
+                local synthesized = H.synthesize_lua_table(doc, cfg_fields, H.s4 .. H.s8)
                 vim.list_extend(lines, synthesized)
                 table.insert(lines, "}")
 
