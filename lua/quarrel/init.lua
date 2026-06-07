@@ -120,9 +120,18 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---
 ---@field blacklist string[] List of directory paths to ignore. Supports absolute
 ---     paths or home-relative paths (e.g., `~/Projects/foo`).
----     Default: `{ vim.fs.dirname(DEFAULT_DB) }`
 ---
----@field mappings quarrel.Mappings Module mappings. Use `''` (empty string) to
+---     Default:
+--- >lua
+---     {
+---             vim.fs.dirname(DEFAULT_DB),
+---             "/tmp",
+---             "/var/tmp",
+---             vim.env.TMPDIR,
+---     }
+--- <
+---
+---@field mappings quarrel.Mappings Module mappings. Use '' (empty string) to
 ---     disable one.
 ---
 ---@usage >lua
@@ -168,7 +177,12 @@ Quarrel.config = {
         hist_level = 3,
         use_vcs = false,
         notify = false,
-        blacklist = { vim.fs.dirname(DEFAULT_DB) },
+        blacklist = {
+                vim.fs.dirname(DEFAULT_DB),
+                "/tmp",
+                "/var/tmp",
+                vim.env.TMPDIR or "",
+        },
         mappings = {
                 add = "<leader>a",
                 edit = "<leader>e",
@@ -465,6 +479,10 @@ H.editor_buf = nil
 ---@type boolean?
 H.is_notify_hijacked = nil
 
+---@private
+---@type string[]
+H.resolved_blacklist = {}
+
 -- ################################################################################################
 --
 --                                     HELPER FUNCTIONALITY
@@ -523,6 +541,13 @@ end
 function H.apply_config(config)
         Quarrel.config = config
         vim.g.quarrel = config
+
+        -- stylua: ignore
+        H.resolved_blacklist = vim.iter(config.blacklist or {})
+                :filter(function(it) return it and it ~= "" end)
+                :map(H.resolve)
+                :totable()
+
         H.create_autocommands()
         H.create_usercommands()
         H.create_mappings(config)
@@ -656,8 +681,8 @@ end
 ---@return boolean # True if the path or its parent is blacklisted.
 function H.is_blacklisted(path)
         local abspath = H.resolve(path)
-        return vim.iter(H.get_config().blacklist or {}):any(function(item)
-                return vim.startswith(abspath, H.resolve(item))
+        return vim.iter(H.resolved_blacklist):any(function(item)
+                return vim.startswith(abspath, item)
         end)
 end
 
@@ -1018,22 +1043,7 @@ function H.is_eligible(path)
                 return nil
         end
 
-        -- stylua: ignore
-        local roots = vim.iter({
-                vim.env.TMPDIR,
-                "/tmp/",
-                "/var/tmp/"
-        })
-                -- discard $TMPDIR if unset
-                :filter(function(it) return it and it ~= "" end)
-                :map(function(it) return vim.fs.normalize(vim.fs.abspath(it)) end)
-                :totable()
-
-        if
-                vim.iter(roots):any(function(it)
-                        return vim.startswith(abspath, it)
-                end)
-        then
+        if H.is_blacklisted(abspath) then
                 return nil
         end
 

@@ -117,9 +117,18 @@ Fields ~
 
 {blacklist} `(string[])` List of directory paths to ignore. Supports absolute
     paths or home-relative paths (e.g., `~/Projects/foo`).
-    Default: `{ vim.fs.dirname(DEFAULT_DB) }`
 
-{mappings} `(quarrel.Mappings)` Module mappings. Use `''` (empty string) to
+    Default:
+>lua
+    {
+            vim.fs.dirname(DEFAULT_DB),
+            "/tmp",
+            "/var/tmp",
+            vim.env.TMPDIR,
+    }
+<
+
+{mappings} `(quarrel.Mappings)` Module mappings. Use '' (empty string) to
     disable one.
 
 Fields {quarrel.Mappings} ~

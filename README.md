@@ -121,7 +121,12 @@ vim.g.quarrel = {
         -- Whether to automatically echo the arglist on changes.
         notify = false,
         -- List of directory paths to ignore. Supports absolute paths or home-relative paths (e.g., `~/Projects/foo`).
-        blacklist = { vim.fs.dirname(DEFAULT_DB) },
+        blacklist = {
+                vim.fs.dirname(DEFAULT_DB),
+                "/tmp",
+                "/var/tmp",
+                vim.env.TMPDIR,
+        },
         -- Module mappings. Use '' (empty string) to disable one.
         mappings = {
                 -- Add current file to arglist.
