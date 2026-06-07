@@ -765,6 +765,18 @@ function H.read_db_file(path)
 end
 
 ---@private
+--- Resolve a path to its canonical absolute form.
+---
+--- Normalizes the path by resolving relative segments and following symlinks.
+---
+---@param path string File or directory path.
+---
+---@return string # The resolved absolute path.
+function H.resolve(path)
+        return vim.fs.normalize(vim.uv.fs_realpath(path) or vim.fs.abspath(path))
+end
+
+---@private
 --- Get the current VCS scope. [EXPERIMENTAL]
 ---
 --- VCS identifiers (such as branches or bookmarks) define the active history
@@ -888,8 +900,9 @@ end
 ---
 ---@return string # The resolved key (plain cwd or vcs composite).
 function H.get_active_key(cwd)
-        local scope = H.get_current_scope(cwd)
-        return scope and (cwd .. "\0" .. scope) or cwd
+        local real_cwd = H.resolve(cwd)
+        local scope = H.get_current_scope(real_cwd)
+        return scope and (real_cwd .. "\0" .. scope) or real_cwd
 end
 
 ---@private
@@ -960,8 +973,7 @@ function H.is_eligible(path)
                 return nil
         end
 
-        -- collapse redundant separators and resolve relative paths
-        local abspath = vim.fs.normalize(vim.fs.abspath(path))
+        local abspath = H.resolve(path)
         if vim.fn.isdirectory(abspath) == 1 then
                 return nil
         end
