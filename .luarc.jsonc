@@ -25,7 +25,9 @@
                         "teardown",
                         "pending",
                         // assert is a builtin, but we add it here to allow indexing fields (busted/luassert)
-                        "assert"
+                        "assert",
+                        // custom
+                        "clear"
                 ],
                 "unusedLocalExclude": [
                         "_*"

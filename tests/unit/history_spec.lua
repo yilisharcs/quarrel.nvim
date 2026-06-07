@@ -1,19 +1,19 @@
 local Quarrel = require("quarrel")
 local H = Quarrel.__INTERNAL_H
+local t = require("tests.testutil")
 
 describe("history management", function()
-        local test_cwd, _ = vim.uv.cwd()
-        assert(test_cwd, "tests must run from a filesystem directory")
-        test_cwd = vim.fs.normalize(test_cwd)
+        t.setup()
+        local temp_root = t.create_temp_dir()
+        local test_cwd = vim.fs.joinpath(temp_root, "project")
+        vim.fn.mkdir(test_cwd, "p")
+
+        local original_is_eligible = H.is_eligible
+        local original_get_current_scope = H.get_current_scope
 
         before_each(function()
-                -- reset plugin config
-                vim.g.quarrel = nil
-                -- reset the in-memory database
-                Quarrel.cache.db = {
-                        _meta = { version = 1 },
-                        data = {},
-                }
+                vim.uv.chdir(test_cwd)
+
                 -- mock `is_eligible`: bypass real path-filtering
                 -- and return only absolute paths
                 H.is_eligible = function(path)
@@ -23,11 +23,11 @@ describe("history management", function()
                                 return "/test/" .. path
                         end
                 end
-                -- mock `uv.cwd`: stub CWD to a fixed path so
-                -- tests don't depend on the launch directory
-                vim.uv.cwd = function()
-                        return test_cwd
-                end
+        end)
+
+        after_each(function()
+                H.is_eligible = original_is_eligible
+                H.get_current_scope = original_get_current_scope
         end)
 
         describe("update_history", function()
@@ -66,7 +66,7 @@ describe("history management", function()
                 end)
 
                 it("respects hist_level", function()
-                        vim.g.quarrel = { hist_level = 2 }
+                        clear({ hist_level = 2 })
 
                         -- should delete this one
                         H.update_history(test_cwd, { "foo", "bar" }, "append")
@@ -131,7 +131,7 @@ describe("history management", function()
                 end)
 
                 it("navigates vcs-scoped history correctly", function()
-                        vim.g.quarrel = { use_vcs = true }
+                        clear({ use_vcs = true })
 
                         -- mock scope resolution
                         H.get_current_scope = function()
