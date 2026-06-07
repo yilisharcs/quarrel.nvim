@@ -15,6 +15,8 @@
 ---@field is_true fun(v: any)
 ---@field is_false fun(v: any)
 ---@field is_nil fun(v: any)
+---@field truthy fun(v: any)
+---@field falsy fun(v: any)
 ---@field are_equal fun(expected: any, actual: any)
 ---@field are_same fun(expected: any, actual: any)
 

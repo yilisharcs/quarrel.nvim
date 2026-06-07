@@ -93,6 +93,8 @@
 local Quarrel = {}
 local H = {}
 
+local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack")
+
 ---@toc_entry CONFIGURATION
 ---@tag Quarrel-configuration
 ---@class quarrel.Config
@@ -116,6 +118,10 @@ local H = {}
 ---@field notify boolean Whether to automatically echo the arglist on changes.
 ---     Default: `false`
 ---
+---@field blacklist string[] List of directory paths to ignore. Supports absolute
+---     paths or home-relative paths (e.g., `~/Projects/foo`).
+---     Default: `{ vim.fs.dirname(DEFAULT_DB) }`
+---
 ---@field mappings quarrel.Mappings Module mappings. Use `''` (empty string) to
 ---     disable one.
 ---
@@ -126,6 +132,7 @@ local H = {}
 ---             hist_level = 10,
 ---             notify = true,
 ---             use_vcs = true,
+---             blacklist = { "~/Malware" },
 ---             mappings = {
 ---                     add = "<leader>qa",
 ---                     edit = "<leader>qe",
@@ -157,10 +164,11 @@ local H = {}
 
 ---@type quarrel.Config
 Quarrel.config = {
-        database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
+        database = DEFAULT_DB,
         hist_level = 3,
         use_vcs = false,
         notify = false,
+        blacklist = { vim.fs.dirname(DEFAULT_DB) },
         mappings = {
                 add = "<leader>a",
                 edit = "<leader>e",
@@ -224,7 +232,7 @@ end
 --- arglist to the session state without touching the disk. Updates the active
 --- snapshot to match the current arglist.
 function Quarrel.write_cache()
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -255,7 +263,7 @@ end
 --- |VimEnter| (on startup) |autocommand|s. Call this manually to sync the active
 --- arglist with the stored state for the current directory.
 function Quarrel.read()
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -277,7 +285,7 @@ end
 ---
 ---@param path string? Path to add. Supports absolute or home-relative strings. Defaults to current file.
 function Quarrel.add(path)
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -305,7 +313,7 @@ end
 ---
 ---@param idx number Arglist index.
 function Quarrel.goto_arg(idx)
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
         pcall(vim.cmd.argument, { count = idx })
@@ -313,7 +321,7 @@ end
 
 --- Navigate to the older arglist in history.
 function Quarrel.older()
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -331,7 +339,7 @@ end
 
 --- Navigate to the newer arglist in history.
 function Quarrel.newer()
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -352,7 +360,7 @@ end
 --- Opens a |special-buffer| with 'filetype' quarrel for the current directory's
 --- arglist. Edits, additions, removals, and shuffles are written to the cache.
 function Quarrel.edit()
-        if H.is_disabled() then
+        if H.should_ignore() then
                 return
         end
 
@@ -492,6 +500,7 @@ function H.validate_config(config)
         vim.validate("hist_level", c.hist_level, "number", true)
         vim.validate("use_vcs", c.use_vcs, "boolean", true)
         vim.validate("notify", c.notify, "boolean", true)
+        vim.validate("blacklist", c.blacklist, "table", true)
         vim.validate("mappings", c.mappings, "table", true)
 
         if c.mappings then
@@ -637,6 +646,33 @@ end
 ---@return quarrel.Config
 function H.get_config(config)
         return vim.tbl_deep_extend("force", H.DEFAULT_CONFIG, vim.g.quarrel or {}, config or {})
+end
+
+---@private
+--- Check if a path is blacklisted.
+---
+---@param path string Path to check.
+---
+---@return boolean # True if the path or its parent is blacklisted.
+function H.is_blacklisted(path)
+        local abspath = H.resolve(path)
+        return vim.iter(H.get_config().blacklist or {}):any(function(item)
+                return vim.startswith(abspath, H.resolve(item))
+        end)
+end
+
+---@private
+--- Check if module should ignore the current context.
+---
+---@param path string? Path to check. Defaults to |current-directory|.
+---
+---@return boolean # True if disabled or blacklisted.
+function H.should_ignore(path)
+        local cwd = path or vim.uv.cwd()
+        if not cwd then
+                return true
+        end
+        return H.is_disabled() or H.is_blacklisted(cwd)
 end
 
 ---@private
@@ -943,6 +979,10 @@ end
 ---
 --- Filters out any arguments that evaluate to a directory.
 function H.init_arglist()
+        if H.should_ignore() then
+                return
+        end
+
         local argf_no_dir = vim.iter(vim.v.argf):map(H.is_eligible):totable()
 
         if #argf_no_dir == 0 then

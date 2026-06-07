@@ -115,6 +115,10 @@ Fields ~
 {notify} `(boolean)` Whether to automatically echo the arglist on changes.
     Default: `false`
 
+{blacklist} `(string[])` List of directory paths to ignore. Supports absolute
+    paths or home-relative paths (e.g., `~/Projects/foo`).
+    Default: `{ vim.fs.dirname(DEFAULT_DB) }`
+
 {mappings} `(quarrel.Mappings)` Module mappings. Use `''` (empty string) to
     disable one.
 
@@ -145,6 +149,7 @@ Usage ~
             hist_level = 10,
             notify = true,
             use_vcs = true,
+            blacklist = { "~/Malware" },
             mappings = {
                     add = "<leader>qa",
                     edit = "<leader>qe",
