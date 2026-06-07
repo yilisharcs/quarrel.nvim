@@ -3,11 +3,21 @@ package.path = "./vendor/mini.doc/lua/?.lua;" .. package.path
 local minidoc = require("mini.doc")
 minidoc.setup()
 
+local spec = {
+        id = "quarrel",
+        title = "Quarrel",
+        author = "yilisharcs",
+        cmd_prefix = "Q",
+}
+
+local repo = spec.author .. "/" .. spec.id .. ".nvim"
+local url = "https://codeberg.org/" .. repo
+
 -- documentation manifest. `entrypoint` is explicitly placed at the first index
 -- of the input array passed to `minidoc.generate()` so it can be accessible as
 -- doc[1] in its many hooks.
 local manifest = {
-        entrypoint = "lua/quarrel/init.lua",
+        entrypoint = "lua/" .. spec.id .. "/init.lua",
         metadata = {},
 }
 setmetatable(manifest, {
@@ -63,7 +73,7 @@ H.synthesize_lua_table = function(doc, fields, indent)
                 local desc = f.desc:gsub("\n", "\n" .. indent .. "-- ")
                 table.insert(lines, indent .. "-- " .. desc)
 
-                if f.type:match("^quarrel%.") then
+                if f.type:match("^" .. spec.id .. "%.") then
                         local sub_block = H.find_block_by_class(doc, f.type)
                         if sub_block then
                                 local sub_fields = H.parse_fields(sub_block)
@@ -247,7 +257,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                                 return type(s) == "table"
                                         and s.info
                                         and s.info.id == "@tag"
-                                        and H.has_pattern(s, "Quarrel-configuration")
+                                        and H.has_pattern(s, spec.title .. "-configuration")
                         end)
                 then
                         blocks.config, idxs.config = block, i
@@ -256,7 +266,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                                 return type(s) == "table"
                                         and s.info
                                         and s.info.id == "@class"
-                                        and H.has_pattern(s, "quarrel.Mappings")
+                                        and H.has_pattern(s, spec.id .. ".Mappings")
                         end)
                 then
                         blocks.mappings, idxs.mappings = block, i
@@ -265,7 +275,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                                 return type(s) == "table"
                                         and s.info
                                         and s.info.id == "@tag"
-                                        and H.has_pattern(s, "Quarrel.config")
+                                        and H.has_pattern(s, spec.title .. ".config")
                         end)
                 then
                         blocks.var, idxs.var = block, i
@@ -276,8 +286,8 @@ H.prepare_doc_tree = function(doc, is_readme)
                 local cfg_fields = H.parse_fields(blocks.config)
 
                 local lines = {
-                        "---@type quarrel.Opts",
-                        "vim.g.quarrel = {",
+                        "---@type " .. spec.id .. ".Opts",
+                        "vim.g." .. spec.id .. " = {",
                 }
 
                 -- reassemble configuration documentation from ordered field objects
@@ -421,7 +431,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                 -- get rid of duplicates
                 local duplicates = { idxs.mappings, idxs.var }
 
-                -- find and remove the block for vim.g.quarrel generated
+                -- find and remove the block for vim.g.[id] generated
                 -- from the @type annotation in the usage block
                 for i, block in ipairs(file) do
                         if
@@ -429,7 +439,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                                         return type(s) == "table"
                                                 and s.info
                                                 and s.info.id == "@tag"
-                                                and H.has_pattern(s, "vim.g.quarrel")
+                                                and H.has_pattern(s, "vim.g." .. spec.id)
                                 end)
                         then
                                 table.insert(duplicates, i)
@@ -481,19 +491,21 @@ readme_hooks.doc = function(doc)
                 local is_config_tag = block:has_descendant(function(s)
                         return s.info
                                 and s.info.id == "@tag"
-                                and H.has_pattern(s, "Quarrel-configuration")
+                                and H.has_pattern(s, spec.title .. "-configuration")
                 end)
-                local is_quarrel_class = block:has_descendant(function(s)
+                local is_class = block:has_descendant(function(s)
                         return s.info
                                 and s.info.id == "@class"
-                                and H.has_pattern(s, "quarrel.")
-                                and not H.has_pattern(s, "quarrel.Config")
+                                and H.has_pattern(s, spec.id .. ".")
+                                and not H.has_pattern(s, spec.id .. ".Config")
                 end)
                 local is_var = block:has_descendant(function(s)
-                        return s.info and s.info.id == "@tag" and H.has_pattern(s, "Quarrel.config")
+                        return s.info
+                                and s.info.id == "@tag"
+                                and H.has_pattern(s, spec.title .. ".config")
                 end)
 
-                if is_config_tag or is_quarrel_class or is_var then
+                if is_config_tag or is_class or is_var then
                         should_remove = true
                 end
 
@@ -534,13 +546,13 @@ readme_hooks.doc = function(doc)
                 file:remove(to_remove[i])
         end
 
-        -- remove `quarrel.Setup` class block
+        -- remove `[id].Setup` class block
         for i = #file, 1, -1 do
                 if
                         file[i]:has_descendant(function(s)
                                 return s.info
                                         and s.info.id == "@signature"
-                                        and H.has_pattern(s, "Quarrel.setup")
+                                        and H.has_pattern(s, spec.title .. ".setup")
                         end)
                 then
                         file:remove(i)
@@ -554,7 +566,7 @@ end
 readme_hooks.write_pre = function(lines)
         -- header
         local res = {
-                "# quarrel.nvim",
+                "# " .. spec.id .. ".nvim",
                 "",
                 "Automagically manage project-local arglists.",
                 "",
@@ -564,7 +576,7 @@ readme_hooks.write_pre = function(lines)
                 "",
                 "```lua",
                 "vim.pack.add({",
-                H.s8 .. 'src = "https://codeberg.org/yilisharcs/quarrel.nvim",',
+                H.s8 .. 'src = "' .. url .. '",',
                 "})",
                 "```",
                 "",
@@ -572,9 +584,9 @@ readme_hooks.write_pre = function(lines)
                 "",
                 "```lua",
                 "{",
-                H.s8 .. '"yilisharcs/quarrel.nvim",',
+                H.s8 .. '"' .. repo .. '",',
                 H.s8 .. "init = function()",
-                H.s8 .. H.s8 .. "vim.g.quarrel = { --[[ config goes here ]] }",
+                H.s8 .. H.s8 .. "vim.g." .. spec.id .. " = { --[[ config goes here ]] }",
                 H.s8 .. "end",
                 "}",
                 "```",
@@ -582,15 +594,15 @@ readme_hooks.write_pre = function(lines)
         }
 
         local in_code_block = false
-        for _, line in ipairs(lines) do
+        for i, line in ipairs(lines) do
                 if
                         -- separators
                         line:match("^=+$")
                         or line:match("^%-+$")
                         -- title
-                        or line:find("quarrel.nvim.txt", 1, true)
+                        or line:find(spec.id .. ".nvim.txt", 1, true)
                         -- help tags
-                        or line:match("^%s*%*Quarrel%S*%*%s*$")
+                        or line:match("^%s*%*" .. spec.title .. "%S*%*%s*$")
                         -- license line
                         or line:match("^%s*Apache License 2.0 Copyright")
                         -- TOC
@@ -612,7 +624,7 @@ readme_hooks.write_pre = function(lines)
                         end
                 end
 
-                if line:match("^%s+https://codeberg.org/yilisharcs/quarrel.nvim/issues$") then
+                if line:match("^%s+https://codeberg.org/" .. repo .. "/issues$") then
                         table.insert(res, "")
                         table.insert(res, vim.trim(line))
                         goto next_line
@@ -651,10 +663,16 @@ readme_hooks.write_pre = function(lines)
                 end
 
                 -- level 5 headers
-                local cmd_tag = line:match("^%s+%*(:Q%w+)%*%s*$")
+                local cmd_tag = line:match("^%s+%*(:" .. spec.cmd_prefix .. "%w+)%*%s*$")
                 if cmd_tag then
+                        local sig = cmd_tag
+                        local next_line = lines[i + 1]
+                        if next_line then
+                                sig = next_line:match("^(:" .. spec.cmd_prefix .. "%w+.-)%s%s")
+                                        or sig
+                        end
                         table.insert(res, "")
-                        table.insert(res, "##### " .. cmd_tag)
+                        table.insert(res, "##### " .. sig)
                         table.insert(res, "")
                         goto next_line
                 end
@@ -663,16 +681,19 @@ readme_hooks.write_pre = function(lines)
                         -- de-indent
                         line = line:gsub("^" .. H.s4, "")
                 else
-                        line = line:gsub("%*quarrel.nvim%*", "_quarrel.nvim_")
+                        line = line:gsub("%*" .. spec.id .. ".nvim%*", "_" .. spec.id .. ".nvim_")
                         -- replace command signature at start of
                         -- line with spaces to maintain alignment
-                        line = line:gsub("^(:Q%w+)", function(m)
+                        line = line:gsub("^:" .. spec.cmd_prefix .. "%w+.-%s%s+", function(m)
                                 return string.rep(" ", #m)
                         end)
 
                         -- inline formatting
                         line = line:gsub("%[|MiniMisc|%]", "[MiniMisc]")
-                        line = line:gsub("|:checkhealth| `quarrel` ", "`:checkhealth quarrel` ")
+                        line = line:gsub(
+                                "|:checkhealth| `" .. spec.id .. "` ",
+                                "`:checkhealth " .. spec.id .. "` "
+                        )
                         line = line:gsub("|([^|]+)|", "`%1`")
                 end
                 table.insert(res, line)
@@ -685,7 +706,7 @@ readme_hooks.write_pre = function(lines)
                 "",
                 "## LICENSE",
                 "",
-                "Copyright 2025-2026 yilisharcs",
+                "Copyright 2025-2026 " .. spec.author,
                 "",
                 'Licensed under the Apache License, Version 2.0 (the "License");',
                 "you may not use this file except in compliance with the License.",
@@ -711,7 +732,7 @@ readme_hooks.write_pre = function(lines)
         return final_res
 end
 
-minidoc.generate(manifest(), "doc/quarrel.nvim.txt", {
+minidoc.generate(manifest(), "doc/" .. spec.id .. ".nvim.txt", {
         hooks = doc_hooks,
 })
 
