@@ -218,7 +218,7 @@ end of the arglist. If no {path} is provided, the result of |expand|("%:p") is
 used. The resulting list is then deduplicated and cached.
 
 Parameters ~
-{path} `(string?)` Absolute path to add. Defaults to current file.
+{path} `(string?)` Path to add. Supports absolute or home-relative strings. Defaults to current file.
 
 ------------------------------------------------------------------------------
                                                             *Quarrel.goto_arg()*

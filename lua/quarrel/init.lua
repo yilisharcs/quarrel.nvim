@@ -275,7 +275,7 @@ end
 --- end of the arglist. If no {path} is provided, the result of |expand|("%:p") is
 --- used. The resulting list is then deduplicated and cached.
 ---
----@param path string? Absolute path to add. Defaults to current file.
+---@param path string? Path to add. Supports absolute or home-relative strings. Defaults to current file.
 function Quarrel.add(path)
         if H.is_disabled() then
                 return
@@ -896,7 +896,7 @@ end
 ---@private
 --- Get the active database key for the current directory.
 ---
----@param cwd string Absolute path to the directory.
+---@param cwd string Directory path.
 ---
 ---@return string # The resolved key (plain cwd or vcs composite).
 function H.get_active_key(cwd)
@@ -1003,7 +1003,7 @@ end
 ---@private
 --- Add a path to the end of the arglist with proper escaping.
 ---
----@param path string Absolute path to add.
+---@param path string Path to add.
 function H.argadd(path)
         vim.cmd("$argadd " .. vim.fn.fnameescape(path))
 end
