@@ -75,6 +75,37 @@ H.synthesize_lua_table = function(doc, fields, indent)
                         else
                                 table.insert(lines, indent .. f.name .. " = {},")
                         end
+                elseif f.default and f.default:match("\n") then
+                        local body = f.default:gsub("^\n", "")
+                        local default_lines = vim.split(body, "\n")
+                        local first_line_indent = #(default_lines[1]:match("^(%s*)") or "")
+                        local new_lines = {}
+                        -- multi-line default: re-indent relative to the first line
+                        -- while preserving internal structure, to produce valid Lua
+                        for i, dl in ipairs(default_lines) do
+                                local leading = dl:match("^(%s*)") or ""
+                                local relative_indent = #leading - first_line_indent
+                                local trimmed = dl:gsub("^%s*", "")
+                                if i == 1 then
+                                        new_lines[1] = indent .. f.name .. " = " .. trimmed
+                                elseif i == #default_lines then
+                                        table.insert(
+                                                new_lines,
+                                                indent
+                                                        .. string.rep(" ", relative_indent)
+                                                        .. trimmed
+                                                        .. ","
+                                        )
+                                else
+                                        table.insert(
+                                                new_lines,
+                                                indent
+                                                        .. string.rep(" ", relative_indent)
+                                                        .. trimmed
+                                        )
+                                end
+                        end
+                        vim.list_extend(lines, new_lines)
                 else
                         table.insert(
                                 lines,
@@ -106,12 +137,19 @@ H.parse_fields = function(block)
                 local full_text = table.concat(lines, "\n")
                 full_text = vim.trim(full_text)
 
-                -- handle mini.doc transformations: {name} -> name, `(type)` -> type
+                -- handle mini.doc transformation: {name} -> name
                 full_text = full_text:gsub("^{(%S-)}", "%1")
-                full_text = full_text:gsub("`%(?(%S-)%)?` ", "%1 ")
 
                 -- match: name type description...
-                local name, type_str, rest = full_text:match("^(%S+)%s+(%S+)%s*([\1-\255]*)$")
+                -- try mini.doc format `(type)` first to handle spaces in generic types
+                local name, type_str, rest
+                name, type_str, rest = full_text:match("^(%S+)%s+`%(([^`]+)%)`%s*([\1-\255]*)")
+                if not name then
+                        name, type_str, rest = full_text:match("^(%S+)%s+(%S+%b<>)%s*([\1-\255]*)")
+                end
+                if not name then
+                        name, type_str, rest = full_text:match("^(%S+)%s+(%S+)%s*([\1-\255]*)")
+                end
                 if name then
                         local desc = rest:match("^([\1-\255]-)%s*Default:") or rest
 
@@ -124,10 +162,13 @@ H.parse_fields = function(block)
                         -- line doesn't start with a list marker or whitespace.
                         desc = desc:gsub("([^\n%.%?!:])\n([^-%*%+%s])", "%1 %2")
 
-                        local default = rest:match("Default:%s*(.*)$")
+                        local default = rest:match("Default:%s*([\1-\255]*)$")
                         if default then
                                 -- strip backticks from default value
                                 default = default:gsub("^`", ""):gsub("`$", "")
+                                -- strip vim code block markers from multi-line defaults
+                                default = default:gsub("^[\n%s]*>lua\n*", "\n")
+                                default = default:gsub("[\n%s]*<[\n%s]*$", "")
                         end
                         table.insert(fields, {
                                 name = name,
