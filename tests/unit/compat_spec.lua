@@ -8,24 +8,24 @@ describe("downgrade compatibility", function()
         local test_cwd = vim.fs.joinpath(temp_root, "project")
         vim.fn.mkdir(test_cwd, "p")
 
-        local original_is_eligible = H.is_eligible
+        local eligible_stub
 
         before_each(function()
                 vim.uv.chdir(test_cwd)
 
-                -- mock `is_eligible`: bypass real path-filtering
-                -- and return only absolute paths
-                H.is_eligible = function(path)
+                -- bypass real path-filtering and
+                -- return only absolute paths
+                eligible_stub = stub(H, "is_eligible", function(path)
                         if path:sub(1, 1) == "/" then
                                 return path
                         else
                                 return "/test/" .. path
                         end
-                end
+                end)
         end)
 
         after_each(function()
-                H.is_eligible = original_is_eligible
+                eligible_stub:revert()
         end)
 
         describe("composite key mirroring", function()
@@ -58,5 +58,4 @@ describe("downgrade compatibility", function()
                         assert.are_equal(1, #Quarrel.cache.db.data[test_cwd].entries)
                 end)
         end)
-
 end)

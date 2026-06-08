@@ -8,26 +8,28 @@ describe("history management", function()
         local test_cwd = vim.fs.joinpath(temp_root, "project")
         vim.fn.mkdir(test_cwd, "p")
 
-        local original_is_eligible = H.is_eligible
-        local original_get_current_scope = H.get_current_scope
+        local eligible_stub, scope_stub
 
         before_each(function()
                 vim.uv.chdir(test_cwd)
 
-                -- mock `is_eligible`: bypass real path-filtering
-                -- and return only absolute paths
-                H.is_eligible = function(path)
+                -- bypass real path-filtering and
+                -- return only absolute paths
+                eligible_stub = stub(H, "is_eligible", function(path)
                         if path:sub(1, 1) == "/" then
                                 return path
                         else
                                 return "/test/" .. path
                         end
-                end
+                end)
         end)
 
         after_each(function()
-                H.is_eligible = original_is_eligible
-                H.get_current_scope = original_get_current_scope
+                eligible_stub:revert()
+                if scope_stub then
+                        scope_stub:revert()
+                        scope_stub = nil
+                end
         end)
 
         describe("update_history", function()
@@ -133,10 +135,9 @@ describe("history management", function()
                 it("navigates vcs-scoped history correctly", function()
                         clear({ use_vcs = true })
 
-                        -- mock scope resolution
-                        H.get_current_scope = function()
+                        scope_stub = stub(H, "get_current_scope", function()
                                 return "feat-x"
-                        end
+                        end)
 
                         local branch_key = test_cwd .. "\0" .. "feat-x"
 
@@ -158,9 +159,9 @@ describe("history management", function()
                                 entries = { { "/test/base-file" } },
                         }
 
-                        H.get_current_scope = function()
+                        scope_stub = stub(H, "get_current_scope", function()
                                 return "feat-x"
-                        end
+                        end)
 
                         local history, _cwd = H.get_history_context()
                         assert.is_not_nil(history)
@@ -180,9 +181,9 @@ describe("history management", function()
                                 entries = { { "/test/branch-file" } },
                         }
 
-                        H.get_current_scope = function()
+                        scope_stub = stub(H, "get_current_scope", function()
                                 return "feat-x"
-                        end
+                        end)
 
                         local history, _cwd = H.get_history_context()
                         assert.is_not_nil(history)
