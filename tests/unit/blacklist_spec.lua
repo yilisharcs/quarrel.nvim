@@ -27,7 +27,7 @@ describe("blacklist", function()
                 }
 
                 Quarrel.read()
-                assert.are.same({}, vim.fn.argv())
+                assert.are_same({}, vim.fn.argv())
         end)
 
         it("prevents writing to blacklisted directories", function()

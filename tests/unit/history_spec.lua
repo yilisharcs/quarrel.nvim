@@ -34,12 +34,12 @@ describe("history management", function()
                 it("correctly appends new snapshots", function()
                         H.update_history(test_cwd, { "file1" }, "append")
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.same({ "/test/file1" }, history.entries[1])
-                        assert.are.equal(1, history.index)
+                        assert.are_same({ "/test/file1" }, history.entries[1])
+                        assert.are_equal(1, history.index)
 
                         H.update_history(test_cwd, { "file2" }, "append")
-                        assert.are.same({ "/test/file2" }, history.entries[2])
-                        assert.are.equal(2, history.index)
+                        assert.are_same({ "/test/file2" }, history.entries[2])
+                        assert.are_equal(2, history.index)
                 end)
 
                 it("correctly overwrites the current snapshot", function()
@@ -47,22 +47,22 @@ describe("history management", function()
                         H.update_history(test_cwd, { "file1_updated" }, "overwrite")
 
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(1, #history.entries)
-                        assert.are.same({ "/test/file1_updated" }, history.entries[1])
-                        assert.are.equal(1, history.index)
+                        assert.are_equal(1, #history.entries)
+                        assert.are_same({ "/test/file1_updated" }, history.entries[1])
+                        assert.are_equal(1, history.index)
                 end)
 
                 it("falls back to append if overwrite is called on empty history", function()
                         H.update_history(test_cwd, { "file1" }, "overwrite")
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(1, history.index)
-                        assert.are.same({ "/test/file1" }, history.entries[1])
+                        assert.are_equal(1, history.index)
+                        assert.are_same({ "/test/file1" }, history.entries[1])
                 end)
 
                 it("deduplicates files automatically", function()
                         H.update_history(test_cwd, { "file1", "file1", "file2" }, "append")
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.same({ "/test/file1", "/test/file2" }, history.entries[1])
+                        assert.are_same({ "/test/file1", "/test/file2" }, history.entries[1])
                 end)
 
                 it("respects hist_level", function()
@@ -74,19 +74,19 @@ describe("history management", function()
                         H.update_history(test_cwd, { "hello", "world" }, "append")
 
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(2, #history.entries)
-                        assert.are.same({ "/test/span", "/test/eggs" }, history.entries[1])
-                        assert.are.same({ "/test/hello", "/test/world" }, history.entries[2])
-                        assert.are.equal(2, history.index)
+                        assert.are_equal(2, #history.entries)
+                        assert.are_same({ "/test/span", "/test/eggs" }, history.entries[1])
+                        assert.are_same({ "/test/hello", "/test/world" }, history.entries[2])
+                        assert.are_equal(2, history.index)
                 end)
 
                 it("avoids redundant snapshots via `vim.deep_equal` check", function()
                         H.update_history(test_cwd, { "file1" }, "append")
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(1, #history.entries)
+                        assert.are_equal(1, #history.entries)
 
                         H.update_history(test_cwd, { "file1" }, "append")
-                        assert.are.equal(1, #history.entries)
+                        assert.are_equal(1, #history.entries)
                 end)
         end)
 
@@ -102,10 +102,10 @@ describe("history management", function()
                 it("navigates to older snapshots", function()
                         Quarrel.older()
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(2, history.index)
+                        assert.are_equal(2, history.index)
 
                         Quarrel.older()
-                        assert.are.equal(1, history.index)
+                        assert.are_equal(1, history.index)
                 end)
 
                 it("respects boundary for older snapshots", function()
@@ -113,7 +113,7 @@ describe("history management", function()
                         Quarrel.older() -- index is 1
                         Quarrel.older()
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(1, history.index)
+                        assert.are_equal(1, history.index)
                 end)
 
                 it("navigates to newer snapshots", function()
@@ -121,13 +121,13 @@ describe("history management", function()
                         Quarrel.older() -- index is 1
                         Quarrel.newer()
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(2, history.index)
+                        assert.are_equal(2, history.index)
                 end)
 
                 it("respects boundary for newer snapshots", function()
                         Quarrel.newer() -- already at 3
                         local history = Quarrel.cache.db.data[test_cwd]
-                        assert.are.equal(3, history.index)
+                        assert.are_equal(3, history.index)
                 end)
 
                 it("navigates vcs-scoped history correctly", function()
@@ -147,7 +147,7 @@ describe("history management", function()
                         Quarrel.older()
                         local branch_history = Quarrel.cache.db.data[branch_key]
                         -- verify navigation acted on the scoped key, not the base cwd
-                        assert.are.equal(1, branch_history.index)
+                        assert.are_equal(1, branch_history.index)
                 end)
         end)
 end)
