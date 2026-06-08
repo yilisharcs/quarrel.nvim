@@ -149,5 +149,44 @@ describe("history management", function()
                         -- verify navigation acted on the scoped key, not the base cwd
                         assert.are_equal(1, branch_history.index)
                 end)
+
+                it("falls back to base key history for an unscoped branch", function()
+                        clear({ use_vcs = true })
+
+                        Quarrel.cache.db.data[test_cwd] = {
+                                index = 1,
+                                entries = { { "/test/base-file" } },
+                        }
+
+                        H.get_current_scope = function()
+                                return "feat-x"
+                        end
+
+                        local history, _cwd = H.get_history_context()
+                        assert.is_not_nil(history)
+                        assert.are_same({ "/test/base-file" }, history.entries[1])
+                end)
+
+                it("returns composite key history when it exists", function()
+                        clear({ use_vcs = true })
+
+                        local composite = test_cwd .. "\0feat-x"
+                        Quarrel.cache.db.data[test_cwd] = {
+                                index = 1,
+                                entries = { { "/test/base-file" } },
+                        }
+                        Quarrel.cache.db.data[composite] = {
+                                index = 1,
+                                entries = { { "/test/branch-file" } },
+                        }
+
+                        H.get_current_scope = function()
+                                return "feat-x"
+                        end
+
+                        local history, _cwd = H.get_history_context()
+                        assert.is_not_nil(history)
+                        assert.are_same({ "/test/branch-file" }, history.entries[1])
+                end)
         end)
 end)
