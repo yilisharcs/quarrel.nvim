@@ -8,7 +8,7 @@ describe("database I/O resilience", function()
         local test_cwd = vim.fs.joinpath(temp_root, "project")
         vim.fn.mkdir(test_cwd, "p")
 
-        local eligible_stub
+        local eligible_stub, notify_stub
 
         before_each(function()
                 vim.uv.chdir(test_cwd)
@@ -20,10 +20,15 @@ describe("database I/O resilience", function()
                                 return "/test/" .. path
                         end
                 end)
+
+                -- one of the warn messages if write_db_file fails fills
+                -- up stdout/err/idk. no need to keep track of that here.
+                notify_stub = stub(vim, "notify", function() end)
         end)
 
         after_each(function()
                 eligible_stub:revert()
+                notify_stub:revert()
         end)
 
         it("starts fresh from an empty database file", function()
@@ -63,5 +68,19 @@ describe("database I/O resilience", function()
                 local reloaded = H.read_db_file(path)
                 assert.are_equal(1, reloaded._meta.version)
                 assert.are_same(original.data, reloaded.data)
+        end)
+
+        it("aborts on encode failure", function()
+                local path = vim.fs.joinpath(temp_root, "encode_fail.msgpack")
+                H.write_db_file(path, { data = { function() end } })
+                assert.are_same(0, vim.fn.filereadable(path))
+        end)
+
+        it("aborts when temporary file cannot be opened", function()
+                local open_stub = stub(io, "open", function() end)
+                local path = vim.fs.joinpath(temp_root, "no_open.msgpack")
+                H.write_db_file(path, { data = "test" })
+                open_stub:revert()
+                assert.are_same(0, vim.fn.filereadable(path))
         end)
 end)
