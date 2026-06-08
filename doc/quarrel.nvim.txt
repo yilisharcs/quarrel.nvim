@@ -211,7 +211,8 @@ Commits the current state of all project arglists to the msgpack database file.
 This is handled automatically on |VimLeavePre|.
 
 Parameters ~
-{config} `(quarrel.Opts?)` Optional overrides.
+{config} `(optional)` `(quarrel.Opts)` @deprecated
+    Manipulate `Quarrel.config` directly instead.
 
 ------------------------------------------------------------------------------
                                                                 *Quarrel.read()*

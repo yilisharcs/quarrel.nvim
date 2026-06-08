@@ -265,10 +265,11 @@ end
 --- Commits the current state of all project arglists to the msgpack database file.
 --- This is handled automatically on |VimLeavePre|.
 ---
----@param config quarrel.Opts? Optional overrides.
+---@param config? quarrel.Opts @deprecated
+---     Manipulate `Quarrel.config` directly instead.
 function Quarrel.write_db(config)
-        local active_config = H.get_config(config)
-        H.write_db_file(active_config.database, Quarrel.cache.db)
+        local db = config and config.database or Quarrel.config.database
+        H.write_db_file(db, Quarrel.cache.db)
 end
 
 --- Read project-local arglist from the in-memory cache.
@@ -460,7 +461,7 @@ Quarrel.cache = {}
 setmetatable(Quarrel.cache, {
         __index = function(self, key)
                 if key == "db" then
-                        local data = H.read_db_file(H.get_config().database)
+                        local data = H.read_db_file(Quarrel.config.database)
                         rawset(self, "db", data)
                         return data
                 end
@@ -675,16 +676,6 @@ function H.create_mappings(config)
 end
 
 ---@private
---- Get current configuration.
----
----@param config quarrel.Opts? Optional overrides for this call.
----
----@return quarrel.Config
-function H.get_config(config)
-        return vim.tbl_deep_extend("force", H.DEFAULT_CONFIG, vim.g.quarrel or {}, config or {})
-end
-
----@private
 --- Check if a path is blacklisted.
 ---
 ---@param path string Path to check.
@@ -722,7 +713,7 @@ end
 ---@private
 --- Report the current arglist status.
 function H.notify()
-        if not H.get_config().notify then
+        if not Quarrel.config.notify then
                 return
         end
 
@@ -861,7 +852,7 @@ end
 ---@return string? # The scope name, or nil if none found.
 function H.get_current_scope(cwd)
         local scope
-        if not H.get_config().use_vcs then
+        if not Quarrel.config.use_vcs then
                 goto finalize
         else
                 goto jujutsu
@@ -1105,7 +1096,7 @@ function H.update_history(key, files, mode)
                 history.index = #history.entries
 
                 -- enforce history limit
-                local hist_level = H.get_config().hist_level
+                local hist_level = Quarrel.config.hist_level
                 if #history.entries > hist_level then
                         table.remove(history.entries, 1)
                         history.index = #history.entries
