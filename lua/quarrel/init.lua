@@ -498,12 +498,23 @@ H.resolved_blacklist = {}
 function H.setup_config(config)
         H.validate_config(config)
 
+        local base = vim.deepcopy(H.DEFAULT_CONFIG)
+        local user = config or {}
+        local merged = vim.tbl_deep_extend("force", base, user) --[[@as quarrel.Config]]
+
         -- stylua: ignore
-        local merged = vim.tbl_deep_extend(
-                "force",
-                vim.deepcopy(H.DEFAULT_CONFIG),
-                config or {}
-        ) --[[@as quarrel.Config]]
+        if user.blacklist then
+                -- `tbl_deep_extend` replaces nested lists entirely rather than
+                -- merging them. manually concatenate defaults with user entries
+                -- so the user adds to the blacklist rather than replace it.
+                merged.blacklist = vim.iter({
+                        base.blacklist,
+                        user.blacklist
+                })
+                :flatten()
+                :unique()
+                :totable()
+        end
 
         return merged
 end
