@@ -62,12 +62,16 @@ will remain minimal.
 
 ### Commands
 
-##### :Qedit
+##### :Qedit[!]
 
                         Open a `special-buffer` with 'filetype' quarrel for the
                         current directory's arglist. Edits, additions,
                         removals, and shuffles are committed to the cache on
                         save.
+                        If called as `:Qedit!`, it opens the database browser
+                        in a new tab. The entire `Quarrel.cache.db.data` table
+                        is displayed as a Lua literal. Edit freely and `:write`
+                        to validate, confirm, and save.
 
 ##### :Qolder
 
@@ -133,6 +137,8 @@ vim.g.quarrel = {
                 add = "<leader>a",
                 -- Edit the arglist.
                 edit = "<leader>e",
+                -- Edit the database.
+                edit_db = "<leader>E",
                 -- Go to older arglist.
                 older = "<leader>[",
                 -- Go to newer arglist.

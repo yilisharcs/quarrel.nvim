@@ -49,10 +49,14 @@
 --- # Commands ~
 ---
 ---                                                      *:Qedit*
---- :Qedit                  Open a |special-buffer| with 'filetype' quarrel for the
+--- :Qedit[!]               Open a |special-buffer| with 'filetype' quarrel for the
 ---                         current directory's arglist. Edits, additions,
 ---                         removals, and shuffles are committed to the cache on
 ---                         save.
+---                         If called as `:Qedit!`, it opens the database browser
+---                         in a new tab. The entire `Quarrel.cache.db.data` table
+---                         is displayed as a Lua literal. Edit freely and |:write|
+---                         to validate, confirm, and save.
 ---
 ---                                                      *:Qolder*
 --- :Qolder                 Navigate to an older snapshot in history. Clears the
@@ -159,6 +163,9 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---@field edit string Edit the arglist.
 ---     Default: `"<leader>e"`
 ---
+---@field edit_db string Edit the database.
+---     Default: `"<leader>E"`
+---
 ---@field older string Go to older arglist.
 ---     Default: `"<leader>["`
 ---
@@ -186,6 +193,7 @@ Quarrel.config = {
         mappings = {
                 add = "<leader>a",
                 edit = "<leader>e",
+                edit_db = "<leader>E",
                 older = "<leader>[",
                 newer = "<leader>]",
                 arg1 = "<leader>h",
@@ -385,15 +393,15 @@ function Quarrel.edit()
         end
 
         -- editor toggle
-        if H.editor_buf and vim.api.nvim_buf_is_valid(H.editor_buf) then
-                vim.api.nvim_buf_delete(H.editor_buf, { force = true })
-                H.editor_buf = nil
+        if H.editor_buf_arg and vim.api.nvim_buf_is_valid(H.editor_buf_arg) then
+                vim.api.nvim_buf_delete(H.editor_buf_arg, { force = true })
+                H.editor_buf_arg = nil
                 return
         end
 
         local buf = vim.api.nvim_create_buf(false, true)
         local win = vim.api.nvim_open_win(buf, true, { split = "below" })
-        H.editor_buf = buf
+        H.editor_buf_arg = buf
 
         vim.api.nvim_buf_set_name(buf, "quarrel://" .. cwd)
         vim.api.nvim_set_option_value("filetype", "quarrel", { buf = buf })
@@ -421,6 +429,206 @@ function Quarrel.edit()
                         vim.api.nvim_set_option_value("modified", false, { buf = buf })
                 end,
         })
+end
+
+---@private
+--- Toggle the database editor.
+---
+--- Displays `Quarrel.cache.db.data` as a Lua table literal in a scratch buffer.
+--- Edits, additions, removals, and shuffles are parsed with `load()`, validated,
+--- and written to the cache.
+function H.open_db_editor()
+        -- editor toggle
+        if H.editor_buf_db and vim.api.nvim_buf_is_valid(H.editor_buf_db) then
+                vim.api.nvim_buf_delete(H.editor_buf_db, { force = true })
+                H.editor_buf_db = nil
+                return
+        end
+
+        local buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_open_tabpage(buf, true, {})
+        H.editor_buf_db = buf
+
+        vim.api.nvim_buf_set_name(buf, "quarrel://[DATABASE]")
+        vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
+        vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
+        vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+        vim.api.nvim_set_option_value("shiftwidth", 2, { buf = buf })
+        vim.api.nvim_set_option_value("tabstop", 2, { buf = buf })
+        vim.api.nvim_set_option_value("softtabstop", -1, { buf = buf })
+
+        local header = {
+                "-- quarrel.nvim database browser",
+                "-- Edit the data below and :wq to commit.",
+                ("-- Inspected at %s"):format(os.date("%Y-%m-%d %H:%M:%S")),
+                "",
+        }
+
+        local indent_str = string.rep(" ", 2)
+
+        local dump = vim.inspect(Quarrel.cache.db.data, {
+                indent = indent_str,
+                process = function(item, path)
+                        if path[#path] == vim.inspect["METATABLE"] then
+                                return nil
+                        end
+                        return item
+                end,
+        })
+
+        -- force vertical expansion
+        dump = dump:gsub(", ", ",\n")
+        dump = dump:gsub("{ ", "{\n")
+        dump = dump:gsub(" }", "\n}")
+
+        -- indentation and trailing commas
+        local lines = vim.split(dump, "\n")
+        local level = 0
+        local formatted = {}
+        for _, line in ipairs(lines) do
+                line = vim.trim(line)
+                if line == "" then
+                        goto continue
+                end
+
+                -- dedent if line starts with a closing delimiter
+                if line:find("^[%}%]]") then
+                        level = math.max(0, level - 1)
+                end
+
+                -- ensure trailing comma unless line ends with an opener or separator
+                -- skip the root closing brace where it is flush against the left margin
+                if not line:find("[,%{ %[ %(]$") and not (level == 0 and line:find("^[%}%]]$")) then
+                        line = line .. ","
+                end
+
+                -- apply indentation and collect the line
+                table.insert(formatted, string.rep(indent_str, level) .. line)
+
+                -- increment level if line ends with an opening delimiter
+                if line:find("[%{%[]$") then
+                        level = level + 1
+                end
+
+                ::continue::
+        end
+
+        local final_lines = vim.list_extend({}, header)
+        vim.list_extend(final_lines, formatted)
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, final_lines)
+        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+
+        vim.api.nvim_create_autocmd("BufWriteCmd", {
+                buffer = buf,
+                callback = function()
+                        H.editor_db_cb(buf)
+                end,
+        })
+end
+
+function H.editor_db_cb(buf)
+        local ls = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+        local text = table.concat(ls, "\n")
+
+        -- parse and check syntax
+        local chunk, err = load("return " .. text)
+        if not chunk then
+                vim.notify("quarrel: " .. err, vim.log.levels.ERROR, { title = "quarrel" })
+                return
+        end
+
+        -- execute in protected mode
+        local ok, data = pcall(chunk)
+        if not ok then
+                vim.notify(
+                        "quarrel: " .. tostring(data),
+                        vim.log.levels.ERROR,
+                        { title = "quarrel" }
+                )
+                return
+        end
+
+        -- validate against schema
+        if type(data) ~= "table" then
+                vim.notify(
+                        "quarrel: database must be a table",
+                        vim.log.levels.ERROR,
+                        { title = "quarrel" }
+                )
+                return
+        end
+
+        -- validate against schema
+        for key, val in pairs(data) do
+                if type(key) ~= "string" or type(val) ~= "table" then
+                        vim.notify(
+                                ("quarrel: invalid entry for key %s"):format(tostring(key)),
+                                vim.log.levels.ERROR,
+                                { title = "quarrel" }
+                        )
+                        return
+                end
+
+                if
+                        type(val.index) ~= "number"
+                        or val.index < 1
+                        or val.index > Quarrel.config.hist_level
+                then
+                        vim.notify(
+                                ("quarrel: key %s has invalid index"):format(key),
+                                vim.log.levels.ERROR,
+                                { title = "quarrel" }
+                        )
+                        return
+                end
+
+                if type(val.entries) ~= "table" or #val.entries == 0 then
+                        vim.notify(
+                                ("quarrel: key %s has invalid entries"):format(key),
+                                vim.log.levels.ERROR,
+                                { title = "quarrel" }
+                        )
+                        return
+                end
+
+                for i, entry in ipairs(val.entries) do
+                        if type(entry) ~= "table" then
+                                vim.notify(
+                                        ("quarrel: key %s entries[%s] is not an array"):format(
+                                                key,
+                                                i
+                                        ),
+                                        vim.log.levels.ERROR,
+                                        { title = "quarrel" }
+                                )
+                                return
+                        end
+                        for j, path in ipairs(entry) do
+                                if type(path) ~= "string" then
+                                        vim.notify(
+                                                ("quarrel: key %s entries[%s][%s] is not a string"):format(
+                                                        key,
+                                                        i,
+                                                        j
+                                                ),
+                                                vim.log.levels.ERROR,
+                                                { title = "quarrel" }
+                                        )
+                                        return
+                                end
+                        end
+                end
+        end
+
+        local choice = vim.fn.confirm("Overwrite database with buffer contents?", "&Yes\n&No")
+        if choice ~= 1 then
+                return
+        end
+
+        Quarrel.cache.db.data = data
+        Quarrel.read()
+
+        vim.api.nvim_set_option_value("modified", false, { buf = buf })
 end
 
 -- ################################################################################################
@@ -474,7 +682,11 @@ H.DEFAULT_CONFIG = vim.deepcopy(Quarrel.config)
 
 ---@private
 ---@type number?
-H.editor_buf = nil
+H.editor_buf_arg = nil
+
+---@private
+---@type number?
+H.editor_buf_db = nil
 
 ---@private
 ---@type boolean?
@@ -536,6 +748,7 @@ function H.validate_config(config)
         if c.mappings then
                 vim.validate("mappings.add", c.mappings.add, "string", true)
                 vim.validate("mappings.edit", c.mappings.edit, "string", true)
+                vim.validate("mappings.edit_db", c.mappings.edit_db, "string", true)
                 vim.validate("mappings.older", c.mappings.older, "string", true)
                 vim.validate("mappings.newer", c.mappings.newer, "string", true)
                 vim.validate("mappings.arg1", c.mappings.arg1, "string", true)
@@ -608,9 +821,13 @@ end
 ---@private
 --- Create module user commands.
 function H.create_usercommands()
-        vim.api.nvim_create_user_command("Qedit", function()
-                Quarrel.edit()
-        end, { desc = "Edit the arglist" })
+        vim.api.nvim_create_user_command("Qedit", function(opts)
+                if opts.bang then
+                        H.open_db_editor()
+                else
+                        Quarrel.edit()
+                end
+        end, { bang = true, desc = "Edit the arglist or browse the database" })
 
         vim.api.nvim_create_user_command("Qolder", function()
                 Quarrel.older()
@@ -640,6 +857,9 @@ function H.create_mappings(config)
         map("<Plug>(QuarrelEdit)", function()
                 Quarrel.edit()
         end, "Open the arglist editor")
+        map("<Plug>(QuarrelEditDB)", function()
+                H.open_db_editor()
+        end, "Open the database editor")
         map("<Plug>(QuarrelOlder)", function()
                 Quarrel.older()
         end, "Go to older arglist")
@@ -666,6 +886,7 @@ function H.create_mappings(config)
         local m = config.mappings
         map(m.add, "<Plug>(QuarrelAdd)", "Add current file to the arglist")
         map(m.edit, "<Plug>(QuarrelEdit)", "Open the arglist editor")
+        map(m.edit_db, "<Plug>(QuarrelEditDB)", "Open the database editor")
         map(m.older, "<Plug>(QuarrelOlder)", "Go to older arglist")
         map(m.newer, "<Plug>(QuarrelNewer)", "Go to newer arglist")
         map(m.arg1, "<Plug>(QuarrelArg1)", "Arg file 1")
