@@ -400,8 +400,8 @@ function Quarrel.edit()
         end
 
         local buf = vim.api.nvim_create_buf(false, true)
-        local win = vim.api.nvim_open_win(buf, true, { split = "below" })
         H.editor_buf_arg = buf
+        local win = vim.api.nvim_open_win(buf, true, { split = "below" })
 
         vim.api.nvim_buf_set_name(buf, "quarrel://" .. cwd)
         vim.api.nvim_set_option_value("filetype", "quarrel", { buf = buf })
@@ -410,6 +410,8 @@ function Quarrel.edit()
         vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
         vim.api.nvim_set_option_value("number", true, { win = win })
         vim.api.nvim_set_option_value("relativenumber", false, { win = win })
+        vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
+        vim.api.nvim_set_option_value("wrap", false, { win = win })
 
         local raw_argv = vim.fn.argv() --[[@as string[] ]]
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, raw_argv)
@@ -446,8 +448,9 @@ function H.open_db_editor()
         end
 
         local buf = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_open_tabpage(buf, true, {})
         H.editor_buf_db = buf
+        vim.api.nvim_open_tabpage(buf, true, {})
+        local win = vim.api.nvim_get_current_win()
 
         vim.api.nvim_buf_set_name(buf, "quarrel://[DATABASE]")
         vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
@@ -456,6 +459,8 @@ function H.open_db_editor()
         vim.api.nvim_set_option_value("shiftwidth", 2, { buf = buf })
         vim.api.nvim_set_option_value("tabstop", 2, { buf = buf })
         vim.api.nvim_set_option_value("softtabstop", -1, { buf = buf })
+        vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
+        vim.api.nvim_set_option_value("wrap", false, { win = win })
 
         local header = {
                 "-- quarrel.nvim database browser",
