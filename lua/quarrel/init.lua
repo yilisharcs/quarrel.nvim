@@ -562,8 +562,6 @@ function H.editor_db_cb(buf)
                 )
                 return
         end
-
-        -- validate against schema
         for key, val in pairs(data) do
                 if type(key) ~= "string" or type(val) ~= "table" then
                         vim.notify(
