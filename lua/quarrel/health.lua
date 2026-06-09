@@ -131,6 +131,11 @@ function Health.check()
         -- check mappings
         start("quarrel.nvim [mappings]")
         local mappings = Quarrel.config.mappings
+        if mappings == false then
+                info("Mappings are disabled.")
+                return
+        end
+
         local keys = vim.iter(vim.tbl_keys(mappings))
                 :filter(function(k)
                         return mappings[k] ~= ""

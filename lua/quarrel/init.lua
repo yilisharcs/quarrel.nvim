@@ -135,8 +135,8 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---     }
 --- <
 ---
----@field mappings quarrel.Mappings Module mappings. Use '' (empty string) to
----     disable one.
+---@field mappings (quarrel.Mappings|false) Module mappings. Use `false` to
+---     disable everything, or '' (empty string) to disable one.
 ---
 ---@usage >lua
 ---     ---@type quarrel.Opts
@@ -748,9 +748,9 @@ function H.validate_config(config)
         vim.validate("use_vcs", c.use_vcs, "boolean", true)
         vim.validate("notify", c.notify, "boolean", true)
         vim.validate("blacklist", c.blacklist, "table", true)
-        vim.validate("mappings", c.mappings, "table", true)
+        vim.validate("mappings", c.mappings, { "table", "boolean" }, true)
 
-        if c.mappings then
+        if type(c.mappings) == "table" then
                 vim.validate("mappings.add", c.mappings.add, "string", true)
                 vim.validate("mappings.edit", c.mappings.edit, "string", true)
                 vim.validate("mappings.edit_db", c.mappings.edit_db, "string", true)
@@ -848,6 +848,10 @@ end
 ---
 ---@param config quarrel.Config Validated configuration table.
 function H.create_mappings(config)
+        if config.mappings == false then
+                return
+        end
+
         local map = function(lhs, rhs, desc)
                 if lhs == "" then
                         return
@@ -888,7 +892,7 @@ function H.create_mappings(config)
         end, "Arg file 5")
 
         -- apply mappings
-        local m = config.mappings
+        local m = config.mappings --[[@as quarrel.Mappings]]
         map(m.add, "<Plug>(QuarrelAdd)", "Add current file to the arglist")
         map(m.edit, "<Plug>(QuarrelEdit)", "Open the arglist editor")
         map(m.edit_db, "<Plug>(QuarrelEditDB)", "Open the database editor")

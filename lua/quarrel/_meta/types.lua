@@ -4,7 +4,7 @@
 error("Cannot require a meta file")
 
 ---@class (partial) quarrel.Opts: quarrel.Config
----@field mappings? quarrel.MappingsOpts
+---@field mappings? quarrel.MappingsOpts|false
 
 ---@class (partial) quarrel.MappingsOpts: quarrel.Mappings
 

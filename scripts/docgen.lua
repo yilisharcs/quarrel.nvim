@@ -74,7 +74,8 @@ H.synthesize_lua_table = function(doc, fields, indent)
                 table.insert(lines, indent .. "-- " .. desc)
 
                 if f.type:match("^" .. spec.id .. "%.") then
-                        local sub_block = H.find_block_by_class(doc, f.type)
+                        local base_type = f.type:gsub("|false$", "")
+                        local sub_block = H.find_block_by_class(doc, base_type)
                         if sub_block then
                                 local sub_fields = H.parse_fields(sub_block)
                                 table.insert(lines, indent .. f.name .. " = {")

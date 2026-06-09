@@ -131,7 +131,7 @@ vim.g.quarrel = {
                 "/var/tmp",
                 vim.env.TMPDIR,
         },
-        -- Module mappings. Use '' (empty string) to disable one.
+        -- Module mappings. Use `false` to disable everything, or '' (empty string) to disable one.
         mappings = {
                 -- Add current file to arglist.
                 add = "<leader>a",

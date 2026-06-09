@@ -132,8 +132,8 @@ Fields ~
     }
 <
 
-{mappings} `(quarrel.Mappings)` Module mappings. Use '' (empty string) to
-    disable one.
+{mappings} `(quarrel.Mappings|false)` Module mappings. Use `false` to
+    disable everything, or '' (empty string) to disable one.
 
 Fields {quarrel.Mappings} ~
 {add} `(string)` Add current file to arglist.
