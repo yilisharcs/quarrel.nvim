@@ -575,6 +575,7 @@ function H.editor_db_cb(buf)
                 if
                         type(val.index) ~= "number"
                         or val.index < 1
+                        or val.index > #val.entries
                         or val.index > Quarrel.config.hist_level
                 then
                         vim.notify(
