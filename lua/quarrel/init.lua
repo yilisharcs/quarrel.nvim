@@ -851,7 +851,7 @@ function H.create_mappings(config)
                 return
         end
 
-        local map = function(lhs, rhs, desc)
+        local function map(lhs, rhs, desc)
                 if lhs == "" then
                         return
                 end
