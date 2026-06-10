@@ -961,15 +961,12 @@ function H.notify()
         end
 
         local argv = vim.fn.argv() --[[@as string[] ]]
-        local cur_idx = vim.fn.argidx() + 1
         local parts = {}
         for i, arg in ipairs(argv) do
                 local f = vim.fn.fnamemodify(arg, ":.")
 
                 if H.is_notify_hijacked then
                         f = ("[%d] = %q"):format(i, f)
-                elseif i == cur_idx then
-                        f = "[" .. f .. "]"
                 end
 
                 table.insert(parts, f)
