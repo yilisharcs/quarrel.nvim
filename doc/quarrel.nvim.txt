@@ -286,6 +286,9 @@ Fields ~
     WARNING: Incorrect edits might break the schema and corrupt the database!
              Don't touch this if you don't know what you're doing.
 
+{vcs} `(table<string, { scope: string?, mtime: number }>)` In-memory cache
+    mapping VCS metadata paths to their resolved scope and modified time.
+
 Usage ~
 >lua
     -- Manually clear the cache for a project

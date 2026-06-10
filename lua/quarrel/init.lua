@@ -651,6 +651,9 @@ end
 ---     WARNING: Incorrect edits might break the schema and corrupt the database!
 ---              Don't touch this if you don't know what you're doing.
 ---
+---@field vcs table<string, { scope: string?, mtime: number }> In-memory cache
+---     mapping VCS metadata paths to their resolved scope and modified time.
+---
 ---@usage >lua
 ---     -- Manually clear the cache for a project
 ---     Quarrel.cache.db.data["/home/user/my_project"] = nil
@@ -668,7 +671,9 @@ end
 ---     -- Don't forget to sync your changes!!
 ---     Quarrel.read()
 --- <
-Quarrel.cache = {}
+Quarrel.cache = {
+        vcs = {},
+}
 
 setmetatable(Quarrel.cache, {
         __index = function(self, key)
@@ -770,6 +775,9 @@ end
 function H.apply_config(config)
         Quarrel.config = config
         vim.g.quarrel = config
+        -- sanity check: clear cache in the event that the
+        -- blacklist is modified or `use_vcs` is toggled
+        Quarrel.cache.vcs = {}
 
         -- stylua: ignore
         H.resolved_blacklist = vim.iter(config.blacklist or {})
@@ -1080,8 +1088,16 @@ end
 ---
 ---@return string? # The scope name, or nil if none found.
 function H.get_current_scope(cwd)
-        local scope
+        local scope, vcs_path, mtime, root
         if not Quarrel.config.use_vcs then
+                goto finalize
+        end
+
+        root = vim.fs.root(cwd, {
+                ".jj",
+                ".git",
+        })
+        if not root then
                 goto finalize
         else
                 goto jujutsu
@@ -1092,12 +1108,19 @@ function H.get_current_scope(cwd)
         --    inherits its context until a newer bookmark is encountered.
         -- 2. stable change ID: for anonymous work, uses the immutable change ID
         --    to associate the arglist with the current logical task.
-        do
-                if
-                        vim.fn.executable("jj") == 0
-                        or vim.fn.isdirectory(vim.fs.joinpath(cwd, ".jj")) == 0
-                then
+        if vim.fn.isdirectory(vim.fs.joinpath(root, ".jj")) == 1 then
+                if vim.fn.executable("jj") == 0 then
                         goto git
+                end
+
+                vcs_path = vim.fs.joinpath(root, ".jj/working_copy/checkout")
+                local stat = vim.uv.fs_stat(vcs_path)
+                mtime = stat and stat.mtime.sec or 0
+
+                local cached = Quarrel.cache.vcs[vcs_path]
+                if cached and cached.mtime == mtime then
+                        scope = cached.scope
+                        goto finalize
                 end
 
                 -- stylua: ignore
@@ -1139,8 +1162,18 @@ function H.get_current_scope(cwd)
         ::git::
         -- 1. branch name: maps arglists to the active tracking branch.
         -- 2. short SHA: provides isolation for detached HEAD states.
-        do
+        if vim.fn.isdirectory(vim.fs.joinpath(root, ".git")) == 1 then
                 if vim.fn.executable("git") == 0 then
+                        goto finalize
+                end
+
+                vcs_path = vim.fs.joinpath(root, ".git/HEAD")
+                local stat = vim.uv.fs_stat(vcs_path)
+                mtime = stat and stat.mtime.sec or 0
+
+                local cached = Quarrel.cache.vcs[vcs_path]
+                if cached and cached.mtime == mtime then
+                        scope = cached.scope
                         goto finalize
                 end
 
@@ -1182,7 +1215,12 @@ function H.get_current_scope(cwd)
 
         ::finalize::
 
-        return (scope and scope ~= "") and scope or nil
+        local result = (scope and scope ~= "") and scope or nil
+        -- only save cache hits
+        if vcs_path and scope then
+                Quarrel.cache.vcs[vcs_path] = { scope = result, mtime = mtime }
+        end
+        return result
 end
 
 ---@private
