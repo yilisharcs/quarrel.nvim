@@ -913,13 +913,12 @@ function H.create_mappings(config)
 end
 
 ---@private
---- Check if a path is blacklisted.
+--- Check if an absolute path is blacklisted.
 ---
----@param path string Path to check.
+---@param abspath string Absolute path to check.
 ---
 ---@return boolean # True if the path or its parent is blacklisted.
-function H.is_blacklisted(path)
-        local abspath = H.resolve(path)
+function H.is_blacklisted(abspath)
         return vim.iter(H.resolved_blacklist):any(function(item)
                 return vim.startswith(abspath, item)
         end)
@@ -936,7 +935,7 @@ function H.should_ignore(path)
         if not cwd then
                 return true
         end
-        return H.is_disabled() or H.is_blacklisted(cwd)
+        return H.is_disabled() or H.is_blacklisted(H.resolve(cwd))
 end
 
 ---@private
