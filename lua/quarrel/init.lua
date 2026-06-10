@@ -291,8 +291,8 @@ function Quarrel.read()
         end
 
         local history, _ = H.get_history_context()
-        local raw_list = (history and history.entries[history.index]) or {}
-        local arglist = vim.iter(raw_list):map(H.is_eligible):totable()
+        local arglist = (history and history.entries[history.index]) or {}
+        -- trust the database...
         H.set_arglist(arglist)
 
         if #arglist > 0 then
