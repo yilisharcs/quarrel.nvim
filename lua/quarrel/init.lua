@@ -213,11 +213,7 @@ Quarrel.config = {
 ---@param config quarrel.Opts? Optional overrides.
 function Quarrel.setup(config)
         if vim.version.cmp(vim.version(), { 0, 12, 0 }) < 0 then
-                vim.notify(
-                        "quarrel.nvim requires Neovim 0.12+",
-                        vim.log.levels.ERROR,
-                        { title = "quarrel" }
-                )
+                vim.notify("quarrel.nvim requires Neovim 0.12+", vim.log.levels.ERROR, { title = "quarrel" })
                 return
         end
 
@@ -545,21 +541,13 @@ function H.editor_db_cb(buf)
         -- execute in protected mode
         local ok, data = pcall(chunk)
         if not ok then
-                vim.notify(
-                        "quarrel: " .. tostring(data),
-                        vim.log.levels.ERROR,
-                        { title = "quarrel" }
-                )
+                vim.notify("quarrel: " .. tostring(data), vim.log.levels.ERROR, { title = "quarrel" })
                 return
         end
 
         -- validate against schema
         if type(data) ~= "table" then
-                vim.notify(
-                        "quarrel: database must be a table",
-                        vim.log.levels.ERROR,
-                        { title = "quarrel" }
-                )
+                vim.notify("quarrel: database must be a table", vim.log.levels.ERROR, { title = "quarrel" })
                 return
         end
         for key, val in pairs(data) do
@@ -598,10 +586,7 @@ function H.editor_db_cb(buf)
                 for i, entry in ipairs(val.entries) do
                         if type(entry) ~= "table" then
                                 vim.notify(
-                                        ("quarrel: key %s entries[%s] is not an array"):format(
-                                                key,
-                                                i
-                                        ),
+                                        ("quarrel: key %s entries[%s] is not an array"):format(key, i),
                                         vim.log.levels.ERROR,
                                         { title = "quarrel" }
                                 )
@@ -610,11 +595,7 @@ function H.editor_db_cb(buf)
                         for j, path in ipairs(entry) do
                                 if type(path) ~= "string" then
                                         vim.notify(
-                                                ("quarrel: key %s entries[%s][%s] is not a string"):format(
-                                                        key,
-                                                        i,
-                                                        j
-                                                ),
+                                                ("quarrel: key %s entries[%s][%s] is not a string"):format(key, i, j),
                                                 vim.log.levels.ERROR,
                                                 { title = "quarrel" }
                                         )
@@ -998,11 +979,7 @@ function H.write_db_file(path, data)
         --       believe that it's better to be safe than sorry.
         local ok, packed = pcall(vim.mpack.encode, data)
         if not ok then
-                vim.notify(
-                        "quarrel: could not serialize database",
-                        vim.log.levels.WARN,
-                        { title = "quarrel" }
-                )
+                vim.notify("quarrel: could not serialize database", vim.log.levels.WARN, { title = "quarrel" })
                 return
         end
 

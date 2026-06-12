@@ -34,10 +34,7 @@ describe("downgrade compatibility", function()
                         H.update_history(composite, { "file1" }, "append")
                         H.update_history(composite, { "file2" }, "append")
 
-                        assert.are_same(
-                                Quarrel.cache.db.data[composite],
-                                Quarrel.cache.db.data[test_cwd]
-                        )
+                        assert.are_same(Quarrel.cache.db.data[composite], Quarrel.cache.db.data[test_cwd])
                 end)
 
                 it("does not mirror when key has no null byte", function()

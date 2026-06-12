@@ -33,10 +33,7 @@ function Health.check()
                                         end
                                 end
                                 if count > 0 then
-                                        table.insert(
-                                                incompat,
-                                                ("%s (%d usages)"):format(name, count)
-                                        )
+                                        table.insert(incompat, ("%s (%d usages)"):format(name, count))
                                 end
                         end
                 end
@@ -146,10 +143,7 @@ function Health.check()
         for _, name in ipairs(keys) do
                 local lhs = mappings[name]
                 local map = vim.fn.maparg(lhs, "n", false, true)
-                local expected_rhs = ("<Plug>(Quarrel%s%s)"):format(
-                        name:sub(1, 1):upper(),
-                        name:sub(2)
-                )
+                local expected_rhs = ("<Plug>(Quarrel%s%s)"):format(name:sub(1, 1):upper(), name:sub(2))
 
                 if vim.tbl_isempty(map) or map.rhs == expected_rhs then
                         ok(("`%s`"):format(lhs))
@@ -191,8 +185,7 @@ function Health.check()
         if has_mini_misc then
                 ok("{mini.misc} is installed.")
 
-                local has_auto_root, auto_root_cmds =
-                        pcall(vim.api.nvim_get_autocmds, { group = "MiniMiscAutoRoot" })
+                local has_auto_root, auto_root_cmds = pcall(vim.api.nvim_get_autocmds, { group = "MiniMiscAutoRoot" })
                 if has_auto_root and #auto_root_cmds > 0 then
                         ok("`setup_auto_root()` is active.")
                 elseif type(mini_misc.setup_auto_root) == "function" then
