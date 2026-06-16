@@ -84,3 +84,84 @@ describe("database I/O resilience", function()
                 assert.are_same(0, vim.fn.filereadable(path))
         end)
 end)
+
+describe("dirty keys merge", function()
+        t.setup()
+        local temp_root = t.create_temp_dir()
+
+        local eligible_stub, notify_stub
+
+        before_each(function()
+                eligible_stub = stub(H, "is_eligible", function(path)
+                        if path:sub(1, 1) == "/" then
+                                return path
+                        else
+                                return "/test/" .. path
+                        end
+                end)
+                notify_stub = stub(vim, "notify", function() end)
+        end)
+
+        after_each(function()
+                eligible_stub:revert()
+                notify_stub:revert()
+                H.dirty_keys = {}
+        end)
+
+        it("preserves untouched disk entries on write", function()
+                local path = vim.fs.joinpath(temp_root, "merge.msgpack")
+
+                -- simulate a database with two projects already on disk
+                local on_disk = {
+                        _meta = { version = 1 },
+                        data = {
+                                ["/project_a"] = {
+                                        index = 1,
+                                        entries = { { "/project_a/init.lua" } },
+                                },
+                                ["/project_b"] = {
+                                        index = 1,
+                                        entries = { { "/project_b/main.lua" } },
+                                },
+                        },
+                }
+                H.write_db_file(path, on_disk)
+                H.dirty_keys = {}
+
+                -- this instance only modified project_a
+                H.dirty_keys["/project_a"] = true
+                local mem_data = {
+                        _meta = { version = 1 },
+                        data = {
+                                ["/project_a"] = {
+                                        index = 1,
+                                        entries = { { "/project_a/init.lua", "/project_a/new.lua" } },
+                                },
+                        },
+                }
+
+                H.write_db_file(path, mem_data)
+
+                local result = H.read_db_file(path)
+                assert.are_same(
+                        { "/project_a/init.lua", "/project_a/new.lua" },
+                        result.data["/project_a"].entries[1]
+                )
+                assert.are_same(
+                        { "/project_b/main.lua" },
+                        result.data["/project_b"].entries[1]
+                )
+        end)
+
+        it("clears dirty_keys after successful write", function()
+                local path = vim.fs.joinpath(temp_root, "clean.msgpack")
+                H.dirty_keys["/test"] = true
+
+                H.write_db_file(path, {
+                        _meta = { version = 1 },
+                        data = { ["/test"] = { index = 1, entries = { {} } } },
+                })
+
+                assert.are_same({}, H.dirty_keys)
+        end)
+end)

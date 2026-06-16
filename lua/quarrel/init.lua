@@ -611,6 +611,11 @@ function H.editor_db_cb(buf)
         end
 
         Quarrel.cache.db.data = data
+        -- user explicitly overwrote the database; mark every key dirty so the
+        -- merge-on-write doesn't discard these changes in favor of disk state
+        for key in pairs(data) do
+                H.dirty_keys[key] = true
+        end
         Quarrel.read()
 
         vim.api.nvim_set_option_value("modified", false, { buf = buf })
@@ -669,6 +674,10 @@ setmetatable(Quarrel.cache, {
 ---@private
 ---@type quarrel.Config
 H.DEFAULT_CONFIG = vim.deepcopy(Quarrel.config)
+
+---@private
+---@type table<string, boolean>
+H.dirty_keys = {}
 
 ---@private
 ---@type number?
@@ -784,10 +793,13 @@ function H.create_autocommands()
                         if args.event ~= "VimLeavePre" then
                                 return
                         end
-                        -- prune any index ahead of the pointer
-                        for _, history in pairs(Quarrel.cache.db.data) do
-                                while #history.entries > history.index do
-                                        table.remove(history.entries)
+                        -- prune any index ahead of the pointer, dirty keys only
+                        for key in pairs(H.dirty_keys) do
+                                local history = Quarrel.cache.db.data[key]
+                                if history then
+                                        while #history.entries > history.index do
+                                                table.remove(history.entries)
+                                        end
                                 end
                         end
                         Quarrel.write_db()
@@ -974,6 +986,18 @@ function H.write_db_file(path, data)
                 vim.fn.mkdir(dir, "p")
         end
 
+        -- when dirty keys exist, read the current on-disk state and overlay
+        -- this instance's changes so other instances' entries aren't lost
+        if next(H.dirty_keys) then
+                local disk_data = H.read_db_file(path)
+                for key in pairs(H.dirty_keys) do
+                        if data.data[key] then
+                                disk_data.data[key] = data.data[key]
+                        end
+                end
+                data = disk_data
+        end
+
         -- NOTE: `vim.mpack.encode` can't serialize functions, userdata, and
         --       coroutines. it's probably not relevant to our usecase but I
         --       believe that it's better to be safe than sorry.
@@ -1002,6 +1026,8 @@ function H.write_db_file(path, data)
         if not success then
                 os.remove(tmp_path)
         end
+
+        H.dirty_keys = {}
 end
 
 ---@private
@@ -1346,6 +1372,7 @@ function H.update_history(key, files, mode)
         end
 
         Quarrel.cache.db.data[key] = history
+        H.dirty_keys[key] = true
 
         -- if it's a composite key, update base_cwd for backwards compatibility
         local base_cwd = key:match("^(.-)%z")

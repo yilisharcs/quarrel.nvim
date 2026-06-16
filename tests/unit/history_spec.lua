@@ -90,6 +90,32 @@ describe("history management", function()
                         H.update_history(test_cwd, { "file1" }, "append")
                         assert.are_equal(1, #history.entries)
                 end)
+
+                it("marks dirty keys on snapshot creation", function()
+                        H.update_history(test_cwd, { "file1" }, "append")
+                        assert.is_true(H.dirty_keys[test_cwd])
+                end)
+
+                it("marks dirty keys on overwrite", function()
+                        H.update_history(test_cwd, { "file1" }, "append")
+                        H.dirty_keys = {}
+                        H.update_history(test_cwd, { "file1_updated" }, "overwrite")
+                        assert.is_true(H.dirty_keys[test_cwd])
+                end)
+
+                it("does not mark dirty on redundant snapshot", function()
+                        H.update_history(test_cwd, { "file1" }, "append")
+                        H.dirty_keys = {}
+                        H.update_history(test_cwd, { "file1" }, "append")
+                        assert.is_nil(H.dirty_keys[test_cwd])
+                end)
+
+                it("marks dirty for composite key and its base_cwd", function()
+                        local composite = test_cwd .. "\0feat-x"
+                        H.update_history(composite, { "branch-file" }, "append")
+                        assert.is_true(H.dirty_keys[composite])
+                        assert.is_true(H.dirty_keys[test_cwd])
+                end)
         end)
 
         describe("navigation (:Qolder/:Qnewer)", function()
