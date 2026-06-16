@@ -59,7 +59,6 @@ describe("blacklist", function()
         it("supports home-relative paths (~/)", function()
                 local home = vim.uv.os_homedir()
                 if not home then
-                        pending("No home directory found")
                         return
                 end
 
