@@ -8,7 +8,7 @@ Using Neovim's built-in package manager:
 
 ```lua
 vim.pack.add({
-        src = "https://codeberg.org/yilisharcs/quarrel.nvim",
+        src = "https://github.com/yilisharcs/quarrel.nvim",
 })
 ```
 
@@ -179,7 +179,7 @@ nvim --clean -u scripts/repro.lua
 
 If the issue persists in the minimal environment, please report it at:
 
-https://codeberg.org/yilisharcs/quarrel.nvim/issues
+https://github.com/yilisharcs/quarrel.nvim/issues
 
 ## SIMILAR PLUGINS
 
