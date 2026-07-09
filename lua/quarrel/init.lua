@@ -611,11 +611,9 @@ function H.editor_db_cb(buf)
         end
 
         Quarrel.cache.db.data = data
-        -- user explicitly overwrote the database; mark every key dirty so the
-        -- merge-on-write doesn't discard these changes in favor of disk state
-        for key in pairs(data) do
-                H.dirty_keys[key] = true
-        end
+        -- user explicitly overwrote the database; clear dirty state so the
+        -- merge-on-write doesn't overlay stale on-disk entries
+        H.dirty_keys = {}
         Quarrel.read()
 
         vim.api.nvim_set_option_value("modified", false, { buf = buf })
