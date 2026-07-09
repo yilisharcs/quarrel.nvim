@@ -53,10 +53,7 @@ H.find_block_by_class = function(doc, class_name)
         local file = doc[1]
         for _, block in ipairs(file) do
                 local is_match = block:has_descendant(function(s)
-                        return type(s) == "table"
-                                and s.info
-                                and s.info.id == "@class"
-                                and H.has_pattern(s, class_name)
+                        return type(s) == "table" and s.info and s.info.id == "@class" and H.has_pattern(s, class_name)
                 end)
                 if is_match then
                         return block
@@ -79,8 +76,7 @@ H.synthesize_lua_table = function(doc, fields, indent)
                         if sub_block then
                                 local sub_fields = H.parse_fields(sub_block)
                                 table.insert(lines, indent .. f.name .. " = {")
-                                local sub_lines =
-                                        H.synthesize_lua_table(doc, sub_fields, indent .. H.s8)
+                                local sub_lines = H.synthesize_lua_table(doc, sub_fields, indent .. H.s8)
                                 vim.list_extend(lines, sub_lines)
                                 table.insert(lines, indent .. "},")
                         else
@@ -102,26 +98,15 @@ H.synthesize_lua_table = function(doc, fields, indent)
                                 elseif i == #default_lines then
                                         table.insert(
                                                 new_lines,
-                                                indent
-                                                        .. string.rep(" ", relative_indent)
-                                                        .. trimmed
-                                                        .. ","
+                                                indent .. string.rep(" ", relative_indent) .. trimmed .. ","
                                         )
                                 else
-                                        table.insert(
-                                                new_lines,
-                                                indent
-                                                        .. string.rep(" ", relative_indent)
-                                                        .. trimmed
-                                        )
+                                        table.insert(new_lines, indent .. string.rep(" ", relative_indent) .. trimmed)
                                 end
                         end
                         vim.list_extend(lines, new_lines)
                 else
-                        table.insert(
-                                lines,
-                                indent .. f.name .. " = " .. (f.default or "nil") .. ","
-                        )
+                        table.insert(lines, indent .. f.name .. " = " .. (f.default or "nil") .. ",")
                 end
         end
 
@@ -490,9 +475,7 @@ readme_hooks.doc = function(doc)
                 local should_remove = false
                 -- identify existing blocks to remove for README
                 local is_config_tag = block:has_descendant(function(s)
-                        return s.info
-                                and s.info.id == "@tag"
-                                and H.has_pattern(s, spec.title .. "-configuration")
+                        return s.info and s.info.id == "@tag" and H.has_pattern(s, spec.title .. "-configuration")
                 end)
                 local is_class = block:has_descendant(function(s)
                         return s.info
@@ -501,9 +484,7 @@ readme_hooks.doc = function(doc)
                                 and not H.has_pattern(s, spec.id .. ".Config")
                 end)
                 local is_var = block:has_descendant(function(s)
-                        return s.info
-                                and s.info.id == "@tag"
-                                and H.has_pattern(s, spec.title .. ".config")
+                        return s.info and s.info.id == "@tag" and H.has_pattern(s, spec.title .. ".config")
                 end)
 
                 if is_config_tag or is_class or is_var then
@@ -513,9 +494,7 @@ readme_hooks.doc = function(doc)
                 -- find the start of the API section
                 if
                         block:has_descendant(function(s)
-                                return s.info
-                                        and s.info.id == "@toc_entry"
-                                        and H.has_pattern(s, "PLUGIN API")
+                                return s.info and s.info.id == "@toc_entry" and H.has_pattern(s, "PLUGIN API")
                         end)
                 then
                         skip = true
@@ -528,9 +507,7 @@ readme_hooks.doc = function(doc)
                 -- find the next major section to stop skipping
                 if
                         block:has_descendant(function(s)
-                                return s.info
-                                        and s.info.id == "@toc_entry"
-                                        and H.has_pattern(s, "TROUBLESHOOTING")
+                                return s.info and s.info.id == "@toc_entry" and H.has_pattern(s, "TROUBLESHOOTING")
                         end)
                 then
                         skip = false
@@ -551,9 +528,7 @@ readme_hooks.doc = function(doc)
         for i = #file, 1, -1 do
                 if
                         file[i]:has_descendant(function(s)
-                                return s.info
-                                        and s.info.id == "@signature"
-                                        and H.has_pattern(s, spec.title .. ".setup")
+                                return s.info and s.info.id == "@signature" and H.has_pattern(s, spec.title .. ".setup")
                         end)
                 then
                         file:remove(i)
@@ -625,7 +600,7 @@ readme_hooks.write_pre = function(lines)
                         end
                 end
 
-                if line:match("^%s+https://codeberg.org/" .. repo .. "/issues$") then
+                if line:match("^%s+" .. url .. "/issues$") then
                         table.insert(res, "")
                         table.insert(res, vim.trim(line))
                         goto next_line
@@ -669,8 +644,7 @@ readme_hooks.write_pre = function(lines)
                         local sig = cmd_tag
                         local next_line = lines[i + 1]
                         if next_line then
-                                sig = next_line:match("^(:" .. spec.cmd_prefix .. "%w+.-)%s%s")
-                                        or sig
+                                sig = next_line:match("^(:" .. spec.cmd_prefix .. "%w+.-)%s%s") or sig
                         end
                         table.insert(res, "")
                         table.insert(res, "##### " .. sig)
@@ -691,10 +665,7 @@ readme_hooks.write_pre = function(lines)
 
                         -- inline formatting
                         line = line:gsub("%[|MiniMisc|%]", "[MiniMisc]")
-                        line = line:gsub(
-                                "|:checkhealth| `" .. spec.id .. "` ",
-                                "`:checkhealth " .. spec.id .. "` "
-                        )
+                        line = line:gsub("|:checkhealth| `" .. spec.id .. "` ", "`:checkhealth " .. spec.id .. "` ")
                         line = line:gsub("|([^|]+)|", "`%1`")
                 end
                 table.insert(res, line)
