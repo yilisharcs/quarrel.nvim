@@ -1405,7 +1405,7 @@ return Quarrel
 --- Use the provided minimal reproduction script to isolate the issue from your
 --- personal configuration:
 --- >bash
----     just repro
+---     make repro
 --- <
 --- Alternatively, run it directly with Neovim:
 --- >bash
