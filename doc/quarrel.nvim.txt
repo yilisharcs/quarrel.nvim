@@ -38,8 +38,9 @@ a learning experience in leveraging native solutions over custom special files
 and json. Thus, it was born: a minimal wrapper around the |arglist| that stays
 out of the way. It maps a directory path to a list of paths and encodes them
 into msgpack format with |vim.mpack|. This data is held in-memory until you
-exit Nvim (impossible!!), to mean that this plugin does not support multiple
-instances writing to the database; the last writer wins.
+exit Nvim (impossible!!), at which point it will merge this instance's changes
+with the on-disk database, so that multiple running instances do not clobber
+each other's arglists.
 
 This diverged from the original goal. This plugin handles neither remembering
 the cursor position nor automatically changing directories with heuristics; I
