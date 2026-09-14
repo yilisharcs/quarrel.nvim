@@ -817,7 +817,10 @@ function H.create_autocommands()
                 desc = "Setup arglist on enter",
                 group = group,
                 callback = function()
-                        H.init_arglist()
+                        local arg = vim.v.argv[4]
+                        if not (arg and arg:match("^Man%s+")) then
+                                H.init_arglist()
+                        end
                 end,
         })
 end
