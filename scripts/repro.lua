@@ -15,5 +15,5 @@ local repro_dir = vim.fs.joinpath(abs_here_dir, ".repro")
 vim.fn.mkdir(repro_dir, "p")
 ---@diagnostic disable-next-line: missing-fields
 require("quarrel").setup({
-        database = vim.fs.joinpath(abs_here_dir, ".repro/quarrel.msgpack"),
+    database = vim.fs.joinpath(abs_here_dir, ".repro/quarrel.msgpack"),
 })

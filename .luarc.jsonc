@@ -1,62 +1,62 @@
 {
-        "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
-        "runtime": {
-                "version": "LuaJIT",
-                "path": [
-                        "?.lua",
-                        "?/init.lua",
-                        "lua/?.lua",
-                        "lua/?/init.lua"
-                ],
-                "builtin": {
-                        "jit": "Disable",
-                        "ffi": "Disable",
-                        "bit32": "Disable"
-                }
-        },
-        "workspace": {
-                "checkThirdParty": false,
-                "library": [
-                        "$VIMRUNTIME/lua",
-                        "${3rd}/busted/library"
-                ]
-        },
-        "diagnostics": {
-                "globals": [
-                        "vim",
-                        // busted
-                        "describe",
-                        "it",
-                        "before_each",
-                        "after_each",
-                        "setup",
-                        "teardown",
-                        "pending",
-                        // assert is a builtin, but we add it here to allow indexing fields (busted/luassert)
-                        "assert",
-                        // custom
-                        "clear"
-                ],
-                "unusedLocalExclude": [
-                        "_*"
-                ],
-                "groupFileStatus": {
-                        "ambiguity": "Any",
-                        "duplicate": "Any",
-                        "global": "Any",
-                        "luadoc": "None",
-                        "redefined": "Any",
-                        "strict": "Any",
-                        "strong": "None",
-                        "type-check": "Any",
-                        "unbalanced": "Any",
-                        "unused": "Any"
-                }
-        },
-        "hint": {
-                "enable": true,
-                "setType": true,
-                "paramType": true,
-                "paramName": "All"
+    "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+    "runtime": {
+        "version": "LuaJIT",
+        "path": [
+            "?.lua",
+            "?/init.lua",
+            "lua/?.lua",
+            "lua/?/init.lua"
+        ],
+        "builtin": {
+            "jit": "Disable",
+            "ffi": "Disable",
+            "bit32": "Disable"
         }
+    },
+    "workspace": {
+        "checkThirdParty": false,
+        "library": [
+            "$VIMRUNTIME/lua",
+            "${3rd}/busted/library"
+        ]
+    },
+    "diagnostics": {
+        "globals": [
+            "vim",
+            // busted
+            "describe",
+            "it",
+            "before_each",
+            "after_each",
+            "setup",
+            "teardown",
+            "pending",
+            // assert is a builtin, but we add it here to allow indexing fields (busted/luassert)
+            "assert",
+            // custom
+            "clear"
+        ],
+        "unusedLocalExclude": [
+            "_*"
+        ],
+        "groupFileStatus": {
+            "ambiguity": "Any",
+            "duplicate": "Any",
+            "global": "Any",
+            "luadoc": "None",
+            "redefined": "Any",
+            "strict": "Any",
+            "strong": "None",
+            "type-check": "Any",
+            "unbalanced": "Any",
+            "unused": "Any"
+        }
+    },
+    "hint": {
+        "enable": true,
+        "setType": true,
+        "paramType": true,
+        "paramName": "All"
+    }
 }

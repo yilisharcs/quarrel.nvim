@@ -7,8 +7,8 @@ dofile("scripts/repro.lua")
 -- load up busted
 local status, runner = pcall(require, "busted.runner")
 if not status then
-        print("error: Busted not found. Ensure luajitPackages.busted is in your environment.\n")
-        os.exit(1)
+    print("error: Busted not found. Ensure luajitPackages.busted is in your environment.\n")
+    os.exit(1)
 end
 
 -- mocking library. returns an object with `:revert()` method
@@ -16,10 +16,10 @@ _G.stub = require("luassert.stub").new
 
 -- point busted at the tests/ directory
 _G.arg = {
-        "tests",
-        "--pattern=_spec.lua",
+    "tests",
+    "--pattern=_spec.lua",
 }
 runner({
-        -- busted is not the entry point; nvim calls it as a library
-        standalone = false,
+    -- busted is not the entry point; nvim calls it as a library
+    standalone = false,
 })

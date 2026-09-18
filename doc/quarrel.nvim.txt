@@ -112,8 +112,8 @@ Fields ~
     [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
 
     Supported:
-            - git
-            - jujutsu
+        - git
+        - jujutsu
 
     Default: `false`
 
@@ -126,10 +126,10 @@ Fields ~
     Default:
 >lua
     {
-            vim.fs.dirname(DEFAULT_DB),
-            "/tmp",
-            "/var/tmp",
-            vim.env.TMPDIR,
+        vim.fs.dirname(DEFAULT_DB),
+        "/tmp",
+        "/var/tmp",
+        vim.env.TMPDIR,
     }
 <
 
@@ -162,17 +162,17 @@ Usage ~
 >lua
     ---@type quarrel.Opts
     vim.g.quarrel = {
-            database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
-            hist_level = 10,
-            notify = true,
-            use_vcs = true,
-            blacklist = { "~/Malware" },
-            mappings = {
-                    add = "<leader>qa",
-                    edit = "<leader>qe",
-                    older = "<leader>qo",
-                    newer = "<leader>qn",
-            },
+        database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
+        hist_level = 10,
+        notify = true,
+        use_vcs = true,
+        blacklist = { "~/Malware" },
+        mappings = {
+            add = "<leader>qa",
+            edit = "<leader>qe",
+            older = "<leader>qo",
+            newer = "<leader>qn",
+        },
     }
 <
 ------------------------------------------------------------------------------
@@ -297,13 +297,13 @@ Usage ~
 
     -- Set a new arglist for a project
     Quarrel.cache.db.data["/home/user/my_project"] = {
-            index = 1,
-            entries = {
-                    {
-                            "/home/user/my_project/lua/foo.lua",
-                            "/home/user/my_project/tests/bar.lua",
-                    }
+        index = 1,
+        entries = {
+            {
+                "/home/user/my_project/lua/foo.lua",
+                "/home/user/my_project/tests/bar.lua",
             }
+        }
     }
     -- Don't forget to sync your changes!!
     Quarrel.read()

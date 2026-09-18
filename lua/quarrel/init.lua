@@ -115,8 +115,8 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---     [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
 ---
 ---     Supported:
----             - git
----             - jujutsu
+---         - git
+---         - jujutsu
 ---
 ---     Default: `false`
 ---
@@ -129,10 +129,10 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---     Default:
 --- >lua
 ---     {
----             vim.fs.dirname(DEFAULT_DB),
----             "/tmp",
----             "/var/tmp",
----             vim.env.TMPDIR,
+---         vim.fs.dirname(DEFAULT_DB),
+---         "/tmp",
+---         "/var/tmp",
+---         vim.env.TMPDIR,
 ---     }
 --- <
 ---
@@ -142,17 +142,17 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 ---@usage >lua
 ---     ---@type quarrel.Opts
 ---     vim.g.quarrel = {
----             database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
----             hist_level = 10,
----             notify = true,
----             use_vcs = true,
----             blacklist = { "~/Malware" },
----             mappings = {
----                     add = "<leader>qa",
----                     edit = "<leader>qe",
----                     older = "<leader>qo",
----                     newer = "<leader>qn",
----             },
+---         database = vim.fs.joinpath(vim.env.HOME, ".quarrel.msgpack"),
+---         hist_level = 10,
+---         notify = true,
+---         use_vcs = true,
+---         blacklist = { "~/Malware" },
+---         mappings = {
+---             add = "<leader>qa",
+---             edit = "<leader>qe",
+---             older = "<leader>qo",
+---             newer = "<leader>qn",
+---         },
 ---     }
 --- <
 
@@ -181,28 +181,28 @@ local DEFAULT_DB = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msg
 
 ---@type quarrel.Config
 Quarrel.config = {
-        database = DEFAULT_DB,
-        hist_level = 3,
-        use_vcs = false,
-        notify = false,
-        blacklist = {
-                vim.fs.dirname(DEFAULT_DB),
-                "/tmp",
-                "/var/tmp",
-                vim.env.TMPDIR or "",
-        },
-        mappings = {
-                add = "<leader>a",
-                edit = "<leader>e",
-                edit_db = "<leader>E",
-                older = "<leader>[",
-                newer = "<leader>]",
-                arg1 = "<leader>h",
-                arg2 = "<leader>j",
-                arg3 = "<leader>k",
-                arg4 = "<leader>l",
-                arg5 = "<leader>;",
-        },
+    database = DEFAULT_DB,
+    hist_level = 3,
+    use_vcs = false,
+    notify = false,
+    blacklist = {
+        vim.fs.dirname(DEFAULT_DB),
+        "/tmp",
+        "/var/tmp",
+        vim.env.TMPDIR or "",
+    },
+    mappings = {
+        add = "<leader>a",
+        edit = "<leader>e",
+        edit_db = "<leader>E",
+        older = "<leader>[",
+        newer = "<leader>]",
+        arg1 = "<leader>h",
+        arg2 = "<leader>j",
+        arg3 = "<leader>k",
+        arg4 = "<leader>l",
+        arg5 = "<leader>;",
+    },
 }
 
 --- Module setup.
@@ -213,22 +213,22 @@ Quarrel.config = {
 ---
 ---@param config quarrel.Opts? Optional overrides.
 function Quarrel.setup(config)
-        if vim.version.cmp(vim.version(), { 0, 12, 0 }) < 0 then
-                vim.notify("quarrel.nvim requires Neovim 0.12+", vim.log.levels.ERROR, { title = "quarrel" })
-                return
-        end
+    if vim.version.cmp(vim.version(), { 0, 12, 0 }) < 0 then
+        vim.notify("quarrel.nvim requires Neovim 0.12+", vim.log.levels.ERROR, { title = "quarrel" })
+        return
+    end
 
-        -- export module
-        _G.Quarrel = Quarrel
+    -- export module
+    _G.Quarrel = Quarrel
 
-        -- use local var to avoid de/reserialization via lua-vim bridge roundtrip
-        local validated_config = H.setup_config(config or vim.g.quarrel --[[@as quarrel.Opts?]])
-        H.apply_config(validated_config)
+    -- use local var to avoid de/reserialization via lua-vim bridge roundtrip
+    local validated_config = H.setup_config(config or vim.g.quarrel --[[@as quarrel.Opts?]])
+    H.apply_config(validated_config)
 
-        -- reload arglist on config reload
-        if vim.v.vim_did_enter == 1 then
-                H.init_arglist()
-        end
+    -- reload arglist on config reload
+    if vim.v.vim_did_enter == 1 then
+        H.init_arglist()
+    end
 end
 
 ---@toc_entry PLUGIN API
@@ -251,18 +251,18 @@ end
 --- arglist to the session state without touching the disk. Updates the active
 --- snapshot to match the current arglist.
 function Quarrel.write_cache()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return
-        end
+    local cwd = vim.uv.cwd()
+    if not cwd then
+        return
+    end
 
-        local key = H.get_active_key(cwd)
-        local argv = vim.fn.argv() --[[@as string[] ]]
-        H.update_history(key, argv, "overwrite")
+    local key = H.get_active_key(cwd)
+    local argv = vim.fn.argv() --[[@as string[] ]]
+    H.update_history(key, argv, "overwrite")
 end
 
 --- Write the in-memory cache to the database file.
@@ -273,8 +273,8 @@ end
 ---@param config? quarrel.Opts @deprecated
 ---     Manipulate `Quarrel.config` directly instead.
 function Quarrel.write_db(config)
-        local db = config and config.database or Quarrel.config.database
-        H.write_db_file(db, Quarrel.cache.db)
+    local db = config and config.database or Quarrel.config.database
+    H.write_db_file(db, Quarrel.cache.db)
 end
 
 --- Read project-local arglist from the in-memory cache.
@@ -283,18 +283,18 @@ end
 --- |VimEnter| (on startup) |autocommand|s. Call this manually to sync the active
 --- arglist with the stored state for the current directory.
 function Quarrel.read()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local history, _ = H.get_history_context()
-        local arglist = (history and history.entries[history.index]) or {}
-        -- trust the database...
-        H.set_arglist(arglist)
+    local history, _ = H.get_history_context()
+    local arglist = (history and history.entries[history.index]) or {}
+    -- trust the database...
+    H.set_arglist(arglist)
 
-        if #arglist > 0 then
-                H.notify()
-        end
+    if #arglist > 0 then
+        H.notify()
+    end
 end
 
 --- Add a file to the arglist.
@@ -305,25 +305,25 @@ end
 ---
 ---@param path string? Path to add. Supports absolute or home-relative strings. Defaults to current file.
 function Quarrel.add(path)
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return
-        end
+    local cwd = vim.uv.cwd()
+    if not cwd then
+        return
+    end
 
-        local argv = vim.fn.argv() --[[@as string[] ]]
-        table.insert(argv, path or vim.fn.expand("%:p"))
+    local argv = vim.fn.argv() --[[@as string[] ]]
+    table.insert(argv, path or vim.fn.expand("%:p"))
 
-        local key = H.get_active_key(cwd)
-        local clean = H.update_history(key, argv, "overwrite")
-        if clean then
-                H.set_arglist(clean)
-        end
+    local key = H.get_active_key(cwd)
+    local clean = H.update_history(key, argv, "overwrite")
+    if clean then
+        H.set_arglist(clean)
+    end
 
-        H.notify()
+    H.notify()
 end
 
 --- Go to a specific arglist file.
@@ -333,46 +333,46 @@ end
 ---
 ---@param idx number Arglist index.
 function Quarrel.goto_arg(idx)
-        if H.should_ignore() then
-                return
-        end
-        pcall(vim.cmd.argument, { count = idx })
+    if H.should_ignore() then
+        return
+    end
+    pcall(vim.cmd.argument, { count = idx })
 end
 
 --- Navigate to the older arglist in history.
 function Quarrel.older()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local history, cwd = H.get_history_context()
-        if not history or not cwd then
-                return
-        end
+    local history, cwd = H.get_history_context()
+    if not history or not cwd then
+        return
+    end
 
-        local prev_index = history.index
-        history.index = math.max(1, history.index - 1)
-        if history.index ~= prev_index then
-                Quarrel.read()
-        end
+    local prev_index = history.index
+    history.index = math.max(1, history.index - 1)
+    if history.index ~= prev_index then
+        Quarrel.read()
+    end
 end
 
 --- Navigate to the newer arglist in history.
 function Quarrel.newer()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local history, cwd = H.get_history_context()
-        if not history or not cwd then
-                return
-        end
+    local history, cwd = H.get_history_context()
+    if not history or not cwd then
+        return
+    end
 
-        local prev_index = history.index
-        history.index = math.min(#history.entries, history.index + 1)
-        if history.index ~= prev_index then
-                Quarrel.read()
-        end
+    local prev_index = history.index
+    history.index = math.min(#history.entries, history.index + 1)
+    if history.index ~= prev_index then
+        Quarrel.read()
+    end
 end
 
 --- Toggle the arglist editor.
@@ -380,54 +380,54 @@ end
 --- Opens a |special-buffer| with 'filetype' quarrel for the current directory's
 --- arglist. Edits, additions, removals, and shuffles are written to the cache.
 function Quarrel.edit()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return
-        end
+    local cwd = vim.uv.cwd()
+    if not cwd then
+        return
+    end
 
-        -- editor toggle
-        if H.editor_buf_arg and vim.api.nvim_buf_is_valid(H.editor_buf_arg) then
-                vim.api.nvim_buf_delete(H.editor_buf_arg, { force = true })
-                H.editor_buf_arg = nil
-                return
-        end
+    -- editor toggle
+    if H.editor_buf_arg and vim.api.nvim_buf_is_valid(H.editor_buf_arg) then
+        vim.api.nvim_buf_delete(H.editor_buf_arg, { force = true })
+        H.editor_buf_arg = nil
+        return
+    end
 
-        local buf = vim.api.nvim_create_buf(false, true)
-        H.editor_buf_arg = buf
-        local win = vim.api.nvim_open_win(buf, true, { split = "below" })
+    local buf = vim.api.nvim_create_buf(false, true)
+    H.editor_buf_arg = buf
+    local win = vim.api.nvim_open_win(buf, true, { split = "below" })
 
-        vim.api.nvim_buf_set_name(buf, "quarrel://" .. cwd)
-        vim.api.nvim_set_option_value("filetype", "quarrel", { buf = buf })
-        vim.api.nvim_set_option_value("syntax", "gitignore", { buf = buf })
-        vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
-        vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
-        vim.api.nvim_set_option_value("number", true, { win = win })
-        vim.api.nvim_set_option_value("relativenumber", false, { win = win })
-        vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
-        vim.api.nvim_set_option_value("wrap", false, { win = win })
+    vim.api.nvim_buf_set_name(buf, "quarrel://" .. cwd)
+    vim.api.nvim_set_option_value("filetype", "quarrel", { buf = buf })
+    vim.api.nvim_set_option_value("syntax", "gitignore", { buf = buf })
+    vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+    vim.api.nvim_set_option_value("number", true, { win = win })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = win })
+    vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
+    vim.api.nvim_set_option_value("wrap", false, { win = win })
 
-        local raw_argv = vim.fn.argv() --[[@as string[] ]]
-        vim.api.nvim_buf_set_lines(buf, 0, -1, false, raw_argv)
-        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+    local raw_argv = vim.fn.argv() --[[@as string[] ]]
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, raw_argv)
+    vim.api.nvim_set_option_value("modified", false, { buf = buf })
 
-        vim.api.nvim_create_autocmd("BufWriteCmd", {
-                buffer = buf,
-                callback = function()
-                        local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    vim.api.nvim_create_autocmd("BufWriteCmd", {
+        buffer = buf,
+        callback = function()
+            local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
-                        local key = H.get_active_key(cwd)
-                        local clean = H.update_history(key, lines, "overwrite")
-                        if clean then
-                                H.set_arglist(clean)
-                        end
+            local key = H.get_active_key(cwd)
+            local clean = H.update_history(key, lines, "overwrite")
+            if clean then
+                H.set_arglist(clean)
+            end
 
-                        vim.api.nvim_set_option_value("modified", false, { buf = buf })
-                end,
-        })
+            vim.api.nvim_set_option_value("modified", false, { buf = buf })
+        end,
+    })
 end
 
 ---@private
@@ -437,187 +437,179 @@ end
 --- Edits, additions, removals, and shuffles are parsed with `load()`, validated,
 --- and written to the cache.
 function H.open_db_editor()
-        -- editor toggle
-        if H.editor_buf_db and vim.api.nvim_buf_is_valid(H.editor_buf_db) then
-                vim.api.nvim_buf_delete(H.editor_buf_db, { force = true })
-                H.editor_buf_db = nil
-                return
+    -- editor toggle
+    if H.editor_buf_db and vim.api.nvim_buf_is_valid(H.editor_buf_db) then
+        vim.api.nvim_buf_delete(H.editor_buf_db, { force = true })
+        H.editor_buf_db = nil
+        return
+    end
+
+    local buf = vim.api.nvim_create_buf(false, true)
+    H.editor_buf_db = buf
+    vim.api.nvim_open_tabpage(buf, true, {})
+    local win = vim.api.nvim_get_current_win()
+
+    vim.api.nvim_buf_set_name(buf, "quarrel://[DATABASE]")
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
+    vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+    vim.api.nvim_set_option_value("shiftwidth", 2, { buf = buf })
+    vim.api.nvim_set_option_value("tabstop", 2, { buf = buf })
+    vim.api.nvim_set_option_value("softtabstop", -1, { buf = buf })
+    vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
+    vim.api.nvim_set_option_value("wrap", false, { win = win })
+
+    local header = {
+        "-- quarrel.nvim database browser",
+        "-- Edit the data below and :wq to commit.",
+        ("-- Inspected at %s"):format(os.date("%Y-%m-%d %H:%M:%S")),
+        "",
+    }
+
+    local indent_str = string.rep(" ", 2)
+
+    local dump = vim.inspect(Quarrel.cache.db.data, {
+        indent = indent_str,
+        process = function(item, path)
+            if path[#path] == vim.inspect["METATABLE"] then
+                return nil
+            end
+            return item
+        end,
+    })
+
+    -- force vertical expansion
+    dump = dump:gsub(", ", ",\n")
+    dump = dump:gsub("{ ", "{\n")
+    dump = dump:gsub(" }", "\n}")
+
+    -- indentation and trailing commas
+    local lines = vim.split(dump, "\n")
+    local level = 0
+    local formatted = {}
+    for _, line in ipairs(lines) do
+        line = vim.trim(line)
+        if line == "" then
+            goto continue
         end
 
-        local buf = vim.api.nvim_create_buf(false, true)
-        H.editor_buf_db = buf
-        vim.api.nvim_open_tabpage(buf, true, {})
-        local win = vim.api.nvim_get_current_win()
-
-        vim.api.nvim_buf_set_name(buf, "quarrel://[DATABASE]")
-        vim.api.nvim_set_option_value("filetype", "lua", { buf = buf })
-        vim.api.nvim_set_option_value("buftype", "acwrite", { buf = buf })
-        vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
-        vim.api.nvim_set_option_value("shiftwidth", 2, { buf = buf })
-        vim.api.nvim_set_option_value("tabstop", 2, { buf = buf })
-        vim.api.nvim_set_option_value("softtabstop", -1, { buf = buf })
-        vim.api.nvim_set_option_value("colorcolumn", "0", { win = win })
-        vim.api.nvim_set_option_value("wrap", false, { win = win })
-
-        local header = {
-                "-- quarrel.nvim database browser",
-                "-- Edit the data below and :wq to commit.",
-                ("-- Inspected at %s"):format(os.date("%Y-%m-%d %H:%M:%S")),
-                "",
-        }
-
-        local indent_str = string.rep(" ", 2)
-
-        local dump = vim.inspect(Quarrel.cache.db.data, {
-                indent = indent_str,
-                process = function(item, path)
-                        if path[#path] == vim.inspect["METATABLE"] then
-                                return nil
-                        end
-                        return item
-                end,
-        })
-
-        -- force vertical expansion
-        dump = dump:gsub(", ", ",\n")
-        dump = dump:gsub("{ ", "{\n")
-        dump = dump:gsub(" }", "\n}")
-
-        -- indentation and trailing commas
-        local lines = vim.split(dump, "\n")
-        local level = 0
-        local formatted = {}
-        for _, line in ipairs(lines) do
-                line = vim.trim(line)
-                if line == "" then
-                        goto continue
-                end
-
-                -- dedent if line starts with a closing delimiter
-                if line:find("^[%}%]]") then
-                        level = math.max(0, level - 1)
-                end
-
-                -- ensure trailing comma unless line ends with an opener or separator
-                -- skip the root closing brace where it is flush against the left margin
-                if not line:find("[,%{ %[ %(]$") and not (level == 0 and line:find("^[%}%]]$")) then
-                        line = line .. ","
-                end
-
-                -- apply indentation and collect the line
-                table.insert(formatted, string.rep(indent_str, level) .. line)
-
-                -- increment level if line ends with an opening delimiter
-                if line:find("[%{%[]$") then
-                        level = level + 1
-                end
-
-                ::continue::
+        -- dedent if line starts with a closing delimiter
+        if line:find("^[%}%]]") then
+            level = math.max(0, level - 1)
         end
 
-        local final_lines = vim.list_extend({}, header)
-        vim.list_extend(final_lines, formatted)
-        vim.api.nvim_buf_set_lines(buf, 0, -1, false, final_lines)
-        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+        -- ensure trailing comma unless line ends with an opener or separator
+        -- skip the root closing brace where it is flush against the left margin
+        if not line:find("[,%{ %[ %(]$") and not (level == 0 and line:find("^[%}%]]$")) then
+            line = line .. ","
+        end
 
-        vim.api.nvim_create_autocmd("BufWriteCmd", {
-                buffer = buf,
-                callback = function()
-                        H.editor_db_cb(buf)
-                end,
-        })
+        -- apply indentation and collect the line
+        table.insert(formatted, string.rep(indent_str, level) .. line)
+
+        -- increment level if line ends with an opening delimiter
+        if line:find("[%{%[]$") then
+            level = level + 1
+        end
+
+        ::continue::
+    end
+
+    local final_lines = vim.list_extend({}, header)
+    vim.list_extend(final_lines, formatted)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, final_lines)
+    vim.api.nvim_set_option_value("modified", false, { buf = buf })
+
+    vim.api.nvim_create_autocmd("BufWriteCmd", {
+        buffer = buf,
+        callback = function()
+            H.editor_db_cb(buf)
+        end,
+    })
 end
 
 function H.editor_db_cb(buf)
-        local ls = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-        local text = table.concat(ls, "\n")
+    local ls = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local text = table.concat(ls, "\n")
 
-        -- parse and check syntax
-        local chunk, err = load("return " .. text)
-        if not chunk then
-                vim.notify("quarrel: " .. err, vim.log.levels.ERROR, { title = "quarrel" })
+    -- parse and check syntax
+    local chunk, err = load("return " .. text)
+    if not chunk then
+        vim.notify("quarrel: " .. err, vim.log.levels.ERROR, { title = "quarrel" })
+        return
+    end
+
+    -- execute in protected mode
+    local ok, data = pcall(chunk)
+    if not ok then
+        vim.notify("quarrel: " .. tostring(data), vim.log.levels.ERROR, { title = "quarrel" })
+        return
+    end
+
+    -- validate against schema
+    if type(data) ~= "table" then
+        vim.notify("quarrel: database must be a table", vim.log.levels.ERROR, { title = "quarrel" })
+        return
+    end
+    for key, val in pairs(data) do
+        if type(key) ~= "string" or type(val) ~= "table" then
+            vim.notify(
+                ("quarrel: invalid entry for key %s"):format(tostring(key)),
+                vim.log.levels.ERROR,
+                { title = "quarrel" }
+            )
+            return
+        end
+
+        if
+            type(val.index) ~= "number"
+            or val.index < 1
+            or val.index > #val.entries
+            or val.index > Quarrel.config.hist_level
+        then
+            vim.notify(("quarrel: key %s has invalid index"):format(key), vim.log.levels.ERROR, { title = "quarrel" })
+            return
+        end
+
+        if type(val.entries) ~= "table" or #val.entries == 0 then
+            vim.notify(("quarrel: key %s has invalid entries"):format(key), vim.log.levels.ERROR, { title = "quarrel" })
+            return
+        end
+
+        for i, entry in ipairs(val.entries) do
+            if type(entry) ~= "table" then
+                vim.notify(
+                    ("quarrel: key %s entries[%s] is not an array"):format(key, i),
+                    vim.log.levels.ERROR,
+                    { title = "quarrel" }
+                )
                 return
-        end
-
-        -- execute in protected mode
-        local ok, data = pcall(chunk)
-        if not ok then
-                vim.notify("quarrel: " .. tostring(data), vim.log.levels.ERROR, { title = "quarrel" })
-                return
-        end
-
-        -- validate against schema
-        if type(data) ~= "table" then
-                vim.notify("quarrel: database must be a table", vim.log.levels.ERROR, { title = "quarrel" })
-                return
-        end
-        for key, val in pairs(data) do
-                if type(key) ~= "string" or type(val) ~= "table" then
-                        vim.notify(
-                                ("quarrel: invalid entry for key %s"):format(tostring(key)),
-                                vim.log.levels.ERROR,
-                                { title = "quarrel" }
-                        )
-                        return
+            end
+            for j, path in ipairs(entry) do
+                if type(path) ~= "string" then
+                    vim.notify(
+                        ("quarrel: key %s entries[%s][%s] is not a string"):format(key, i, j),
+                        vim.log.levels.ERROR,
+                        { title = "quarrel" }
+                    )
+                    return
                 end
-
-                if
-                        type(val.index) ~= "number"
-                        or val.index < 1
-                        or val.index > #val.entries
-                        or val.index > Quarrel.config.hist_level
-                then
-                        vim.notify(
-                                ("quarrel: key %s has invalid index"):format(key),
-                                vim.log.levels.ERROR,
-                                { title = "quarrel" }
-                        )
-                        return
-                end
-
-                if type(val.entries) ~= "table" or #val.entries == 0 then
-                        vim.notify(
-                                ("quarrel: key %s has invalid entries"):format(key),
-                                vim.log.levels.ERROR,
-                                { title = "quarrel" }
-                        )
-                        return
-                end
-
-                for i, entry in ipairs(val.entries) do
-                        if type(entry) ~= "table" then
-                                vim.notify(
-                                        ("quarrel: key %s entries[%s] is not an array"):format(key, i),
-                                        vim.log.levels.ERROR,
-                                        { title = "quarrel" }
-                                )
-                                return
-                        end
-                        for j, path in ipairs(entry) do
-                                if type(path) ~= "string" then
-                                        vim.notify(
-                                                ("quarrel: key %s entries[%s][%s] is not a string"):format(key, i, j),
-                                                vim.log.levels.ERROR,
-                                                { title = "quarrel" }
-                                        )
-                                        return
-                                end
-                        end
-                end
+            end
         end
+    end
 
-        local choice = vim.fn.confirm("Overwrite database with buffer contents?", "&Yes\n&No")
-        if choice ~= 1 then
-                return
-        end
+    local choice = vim.fn.confirm("Overwrite database with buffer contents?", "&Yes\n&No")
+    if choice ~= 1 then
+        return
+    end
 
-        Quarrel.cache.db.data = data
-        -- user explicitly overwrote the database; clear dirty state so the
-        -- merge-on-write doesn't overlay stale on-disk entries
-        H.dirty_keys = {}
-        Quarrel.read()
+    Quarrel.cache.db.data = data
+    -- user explicitly overwrote the database; clear dirty state so the
+    -- merge-on-write doesn't overlay stale on-disk entries
+    H.dirty_keys = {}
+    Quarrel.read()
 
-        vim.api.nvim_set_option_value("modified", false, { buf = buf })
+    vim.api.nvim_set_option_value("modified", false, { buf = buf })
 end
 
 -- ################################################################################################
@@ -645,29 +637,29 @@ end
 ---
 ---     -- Set a new arglist for a project
 ---     Quarrel.cache.db.data["/home/user/my_project"] = {
----             index = 1,
----             entries = {
----                     {
----                             "/home/user/my_project/lua/foo.lua",
----                             "/home/user/my_project/tests/bar.lua",
----                     }
+---         index = 1,
+---         entries = {
+---             {
+---                 "/home/user/my_project/lua/foo.lua",
+---                 "/home/user/my_project/tests/bar.lua",
 ---             }
+---         }
 ---     }
 ---     -- Don't forget to sync your changes!!
 ---     Quarrel.read()
 --- <
 Quarrel.cache = {
-        vcs = {},
+    vcs = {},
 }
 
 setmetatable(Quarrel.cache, {
-        __index = function(self, key)
-                if key == "db" then
-                        local data = H.read_db_file(Quarrel.config.database)
-                        rawset(self, "db", data)
-                        return data
-                end
-        end,
+    __index = function(self, key)
+        if key == "db" then
+            local data = H.read_db_file(Quarrel.config.database)
+            rawset(self, "db", data)
+            return data
+        end
+    end,
 })
 
 ---@private
@@ -707,54 +699,54 @@ H.resolved_blacklist = {}
 ---
 ---@return quarrel.Config # Validated and merged configuration.
 function H.setup_config(config)
-        H.validate_config(config)
+    H.validate_config(config)
 
-        local base = vim.deepcopy(H.DEFAULT_CONFIG)
-        local user = config or {}
-        local merged = vim.tbl_deep_extend("force", base, user) --[[@as quarrel.Config]]
+    local base = vim.deepcopy(H.DEFAULT_CONFIG)
+    local user = config or {}
+    local merged = vim.tbl_deep_extend("force", base, user) --[[@as quarrel.Config]]
 
-        -- stylua: ignore
-        if user.blacklist then
-                -- `tbl_deep_extend` replaces nested lists entirely rather than
-                -- merging them. manually concatenate defaults with user entries
-                -- so the user adds to the blacklist rather than replace it.
-                merged.blacklist = vim.iter({
-                        base.blacklist,
-                        user.blacklist
-                })
-                :flatten()
-                :unique()
-                :totable()
-        end
+    -- stylua: ignore
+    if user.blacklist then
+        -- `tbl_deep_extend` replaces nested lists entirely rather than
+        -- merging them. manually concatenate defaults with user entries
+        -- so the user adds to the blacklist rather than replace it.
+        merged.blacklist = vim.iter({
+            base.blacklist,
+            user.blacklist
+        })
+        :flatten()
+        :unique()
+        :totable()
+    end
 
-        return merged
+    return merged
 end
 
 ---@private
 ---@param config quarrel.Opts? Raw configuration table.
 function H.validate_config(config)
-        vim.validate("config", config, "table", true)
-        local c = config or {}
+    vim.validate("config", config, "table", true)
+    local c = config or {}
 
-        vim.validate("database", c.database, "string", true)
-        vim.validate("hist_level", c.hist_level, "number", true)
-        vim.validate("use_vcs", c.use_vcs, "boolean", true)
-        vim.validate("notify", c.notify, "boolean", true)
-        vim.validate("blacklist", c.blacklist, "table", true)
-        vim.validate("mappings", c.mappings, { "table", "boolean" }, true)
+    vim.validate("database", c.database, "string", true)
+    vim.validate("hist_level", c.hist_level, "number", true)
+    vim.validate("use_vcs", c.use_vcs, "boolean", true)
+    vim.validate("notify", c.notify, "boolean", true)
+    vim.validate("blacklist", c.blacklist, "table", true)
+    vim.validate("mappings", c.mappings, { "table", "boolean" }, true)
 
-        if type(c.mappings) == "table" then
-                vim.validate("mappings.add", c.mappings.add, "string", true)
-                vim.validate("mappings.edit", c.mappings.edit, "string", true)
-                vim.validate("mappings.edit_db", c.mappings.edit_db, "string", true)
-                vim.validate("mappings.older", c.mappings.older, "string", true)
-                vim.validate("mappings.newer", c.mappings.newer, "string", true)
-                vim.validate("mappings.arg1", c.mappings.arg1, "string", true)
-                vim.validate("mappings.arg2", c.mappings.arg2, "string", true)
-                vim.validate("mappings.arg3", c.mappings.arg3, "string", true)
-                vim.validate("mappings.arg4", c.mappings.arg4, "string", true)
-                vim.validate("mappings.arg5", c.mappings.arg5, "string", true)
-        end
+    if type(c.mappings) == "table" then
+        vim.validate("mappings.add", c.mappings.add, "string", true)
+        vim.validate("mappings.edit", c.mappings.edit, "string", true)
+        vim.validate("mappings.edit_db", c.mappings.edit_db, "string", true)
+        vim.validate("mappings.older", c.mappings.older, "string", true)
+        vim.validate("mappings.newer", c.mappings.newer, "string", true)
+        vim.validate("mappings.arg1", c.mappings.arg1, "string", true)
+        vim.validate("mappings.arg2", c.mappings.arg2, "string", true)
+        vim.validate("mappings.arg3", c.mappings.arg3, "string", true)
+        vim.validate("mappings.arg4", c.mappings.arg4, "string", true)
+        vim.validate("mappings.arg5", c.mappings.arg5, "string", true)
+    end
 end
 
 ---@private
@@ -762,87 +754,87 @@ end
 ---
 ---@param config quarrel.Config Validated configuration table.
 function H.apply_config(config)
-        Quarrel.config = config
-        vim.g.quarrel = config
-        -- sanity check: clear cache in the event that the
-        -- blacklist is modified or `use_vcs` is toggled
-        Quarrel.cache.vcs = {}
+    Quarrel.config = config
+    vim.g.quarrel = config
+    -- sanity check: clear cache in the event that the
+    -- blacklist is modified or `use_vcs` is toggled
+    Quarrel.cache.vcs = {}
 
-        -- stylua: ignore
-        H.resolved_blacklist = vim.iter(config.blacklist or {})
-                :filter(function(it) return it and it ~= "" end)
-                :map(H.resolve)
-                :totable()
+    -- stylua: ignore
+    H.resolved_blacklist = vim.iter(config.blacklist or {})
+        :filter(function(it) return it and it ~= "" end)
+        :map(H.resolve)
+        :totable()
 
-        H.create_autocommands()
-        H.create_usercommands()
-        H.create_mappings(config)
+    H.create_autocommands()
+    H.create_usercommands()
+    H.create_mappings(config)
 end
 
 ---@private
 --- Create module autocommands.
 function H.create_autocommands()
-        local group = vim.api.nvim_create_augroup("Quarrel", { clear = true })
+    local group = vim.api.nvim_create_augroup("Quarrel", { clear = true })
 
-        vim.api.nvim_create_autocmd({ "DirChangedPre", "VimLeavePre" }, {
-                group = group,
-                desc = "Write project-local arglist",
-                callback = function(args)
-                        Quarrel.write_cache()
-                        if args.event ~= "VimLeavePre" then
-                                return
-                        end
-                        -- prune any index ahead of the pointer, dirty keys only
-                        for key in pairs(H.dirty_keys) do
-                                local history = Quarrel.cache.db.data[key]
-                                if history then
-                                        while #history.entries > history.index do
-                                                table.remove(history.entries)
-                                        end
-                                end
-                        end
-                        Quarrel.write_db()
-                end,
-        })
+    vim.api.nvim_create_autocmd({ "DirChangedPre", "VimLeavePre" }, {
+        group = group,
+        desc = "Write project-local arglist",
+        callback = function(args)
+            Quarrel.write_cache()
+            if args.event ~= "VimLeavePre" then
+                return
+            end
+            -- prune any index ahead of the pointer, dirty keys only
+            for key in pairs(H.dirty_keys) do
+                local history = Quarrel.cache.db.data[key]
+                if history then
+                    while #history.entries > history.index do
+                        table.remove(history.entries)
+                    end
+                end
+            end
+            Quarrel.write_db()
+        end,
+    })
 
-        vim.api.nvim_create_autocmd("DirChanged", {
-                group = group,
-                desc = "Read project-local arglist",
-                callback = function()
-                        Quarrel.read()
-                end,
-        })
+    vim.api.nvim_create_autocmd("DirChanged", {
+        group = group,
+        desc = "Read project-local arglist",
+        callback = function()
+            Quarrel.read()
+        end,
+    })
 
-        vim.api.nvim_create_autocmd({ "VimEnter" }, {
-                desc = "Setup arglist on enter",
-                group = group,
-                callback = function()
-                        local arg = vim.v.argv[4]
-                        if not (arg and arg:match("^Man%s+")) then
-                                H.init_arglist()
-                        end
-                end,
-        })
+    vim.api.nvim_create_autocmd({ "VimEnter" }, {
+        desc = "Setup arglist on enter",
+        group = group,
+        callback = function()
+            local arg = vim.v.argv[4]
+            if not (arg and arg:match("^Man%s+")) then
+                H.init_arglist()
+            end
+        end,
+    })
 end
 
 ---@private
 --- Create module user commands.
 function H.create_usercommands()
-        vim.api.nvim_create_user_command("Qedit", function(opts)
-                if opts.bang then
-                        H.open_db_editor()
-                else
-                        Quarrel.edit()
-                end
-        end, { bang = true, desc = "Edit the arglist or browse the database" })
+    vim.api.nvim_create_user_command("Qedit", function(opts)
+        if opts.bang then
+            H.open_db_editor()
+        else
+            Quarrel.edit()
+        end
+    end, { bang = true, desc = "Edit the arglist or browse the database" })
 
-        vim.api.nvim_create_user_command("Qolder", function()
-                Quarrel.older()
-        end, { desc = "Go to older arglist" })
+    vim.api.nvim_create_user_command("Qolder", function()
+        Quarrel.older()
+    end, { desc = "Go to older arglist" })
 
-        vim.api.nvim_create_user_command("Qnewer", function()
-                Quarrel.newer()
-        end, { desc = "Go to newer arglist" })
+    vim.api.nvim_create_user_command("Qnewer", function()
+        Quarrel.newer()
+    end, { desc = "Go to newer arglist" })
 end
 
 ---@private
@@ -850,61 +842,61 @@ end
 ---
 ---@param config quarrel.Config Validated configuration table.
 function H.create_mappings(config)
-        if config.mappings == false then
-                return
+    if config.mappings == false then
+        return
+    end
+
+    local function map(lhs, rhs, desc)
+        if lhs == "" then
+            return
         end
+        vim.keymap.set("n", lhs, rhs, { desc = desc, silent = true })
+    end
 
-        local function map(lhs, rhs, desc)
-                if lhs == "" then
-                        return
-                end
-                vim.keymap.set("n", lhs, rhs, { desc = desc, silent = true })
-        end
+    -- define mappings
+    map("<Plug>(QuarrelAdd)", function()
+        Quarrel.add()
+    end, "Add current file to the arglist")
+    map("<Plug>(QuarrelEdit)", function()
+        Quarrel.edit()
+    end, "Open the arglist editor")
+    map("<Plug>(QuarrelEditDB)", function()
+        H.open_db_editor()
+    end, "Open the database editor")
+    map("<Plug>(QuarrelOlder)", function()
+        Quarrel.older()
+    end, "Go to older arglist")
+    map("<Plug>(QuarrelNewer)", function()
+        Quarrel.newer()
+    end, "Go to newer arglist")
+    map("<Plug>(QuarrelArg1)", function()
+        Quarrel.goto_arg(1)
+    end, "Arg file 1")
+    map("<Plug>(QuarrelArg2)", function()
+        Quarrel.goto_arg(2)
+    end, "Arg file 2")
+    map("<Plug>(QuarrelArg3)", function()
+        Quarrel.goto_arg(3)
+    end, "Arg file 3")
+    map("<Plug>(QuarrelArg4)", function()
+        Quarrel.goto_arg(4)
+    end, "Arg file 4")
+    map("<Plug>(QuarrelArg5)", function()
+        Quarrel.goto_arg(5)
+    end, "Arg file 5")
 
-        -- define mappings
-        map("<Plug>(QuarrelAdd)", function()
-                Quarrel.add()
-        end, "Add current file to the arglist")
-        map("<Plug>(QuarrelEdit)", function()
-                Quarrel.edit()
-        end, "Open the arglist editor")
-        map("<Plug>(QuarrelEditDB)", function()
-                H.open_db_editor()
-        end, "Open the database editor")
-        map("<Plug>(QuarrelOlder)", function()
-                Quarrel.older()
-        end, "Go to older arglist")
-        map("<Plug>(QuarrelNewer)", function()
-                Quarrel.newer()
-        end, "Go to newer arglist")
-        map("<Plug>(QuarrelArg1)", function()
-                Quarrel.goto_arg(1)
-        end, "Arg file 1")
-        map("<Plug>(QuarrelArg2)", function()
-                Quarrel.goto_arg(2)
-        end, "Arg file 2")
-        map("<Plug>(QuarrelArg3)", function()
-                Quarrel.goto_arg(3)
-        end, "Arg file 3")
-        map("<Plug>(QuarrelArg4)", function()
-                Quarrel.goto_arg(4)
-        end, "Arg file 4")
-        map("<Plug>(QuarrelArg5)", function()
-                Quarrel.goto_arg(5)
-        end, "Arg file 5")
-
-        -- apply mappings
-        local m = config.mappings --[[@as quarrel.Mappings]]
-        map(m.add, "<Plug>(QuarrelAdd)", "Add current file to the arglist")
-        map(m.edit, "<Plug>(QuarrelEdit)", "Open the arglist editor")
-        map(m.edit_db, "<Plug>(QuarrelEditDB)", "Open the database editor")
-        map(m.older, "<Plug>(QuarrelOlder)", "Go to older arglist")
-        map(m.newer, "<Plug>(QuarrelNewer)", "Go to newer arglist")
-        map(m.arg1, "<Plug>(QuarrelArg1)", "Arg file 1")
-        map(m.arg2, "<Plug>(QuarrelArg2)", "Arg file 2")
-        map(m.arg3, "<Plug>(QuarrelArg3)", "Arg file 3")
-        map(m.arg4, "<Plug>(QuarrelArg4)", "Arg file 4")
-        map(m.arg5, "<Plug>(QuarrelArg5)", "Arg file 5")
+    -- apply mappings
+    local m = config.mappings --[[@as quarrel.Mappings]]
+    map(m.add, "<Plug>(QuarrelAdd)", "Add current file to the arglist")
+    map(m.edit, "<Plug>(QuarrelEdit)", "Open the arglist editor")
+    map(m.edit_db, "<Plug>(QuarrelEditDB)", "Open the database editor")
+    map(m.older, "<Plug>(QuarrelOlder)", "Go to older arglist")
+    map(m.newer, "<Plug>(QuarrelNewer)", "Go to newer arglist")
+    map(m.arg1, "<Plug>(QuarrelArg1)", "Arg file 1")
+    map(m.arg2, "<Plug>(QuarrelArg2)", "Arg file 2")
+    map(m.arg3, "<Plug>(QuarrelArg3)", "Arg file 3")
+    map(m.arg4, "<Plug>(QuarrelArg4)", "Arg file 4")
+    map(m.arg5, "<Plug>(QuarrelArg5)", "Arg file 5")
 end
 
 ---@private
@@ -914,9 +906,9 @@ end
 ---
 ---@return boolean # True if the path or its parent is blacklisted.
 function H.is_blacklisted(abspath)
-        return vim.iter(H.resolved_blacklist):any(function(item)
-                return vim.startswith(abspath, item)
-        end)
+    return vim.iter(H.resolved_blacklist):any(function(item)
+        return vim.startswith(abspath, item)
+    end)
 end
 
 ---@private
@@ -926,11 +918,11 @@ end
 ---
 ---@return boolean # True if disabled or blacklisted.
 function H.should_ignore(path)
-        local cwd = path or vim.uv.cwd()
-        if not cwd then
-                return true
-        end
-        return H.is_disabled() or H.is_blacklisted(H.resolve(cwd))
+    local cwd = path or vim.uv.cwd()
+    if not cwd then
+        return true
+    end
+    return H.is_disabled() or H.is_blacklisted(H.resolve(cwd))
 end
 
 ---@private
@@ -938,43 +930,43 @@ end
 ---
 ---@return boolean # True if disabled globally.
 function H.is_disabled()
-        return vim.g.quarrel_disable == true
+    return vim.g.quarrel_disable == true
 end
 
 ---@private
 --- Report the current arglist status.
 function H.notify()
-        if not Quarrel.config.notify then
-                return
-        end
+    if not Quarrel.config.notify then
+        return
+    end
 
-        if H.is_notify_hijacked == nil then
-                local info = debug.getinfo(vim.notify, "Su")
-                -- NOTE: source checks for snacks.nvim, nups checks for mini.nvim
-                H.is_notify_hijacked = info.source ~= "@vim/_core/editor.lua" or info.nups > 0
-        end
+    if H.is_notify_hijacked == nil then
+        local info = debug.getinfo(vim.notify, "Su")
+        -- NOTE: source checks for snacks.nvim, nups checks for mini.nvim
+        H.is_notify_hijacked = info.source ~= "@vim/_core/editor.lua" or info.nups > 0
+    end
 
-        local argv = vim.fn.argv() --[[@as string[] ]]
-        local parts = {}
-        for i, arg in ipairs(argv) do
-                local f = vim.fn.fnamemodify(arg, ":.")
+    local argv = vim.fn.argv() --[[@as string[] ]]
+    local parts = {}
+    for i, arg in ipairs(argv) do
+        local f = vim.fn.fnamemodify(arg, ":.")
 
-                if H.is_notify_hijacked then
-                        f = ("[%d] = %q"):format(i, f)
-                end
-
-                table.insert(parts, f)
-        end
-
-        local msg = table.concat(parts, "\n")
         if H.is_notify_hijacked then
-                msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}"
+            f = ("[%d] = %q"):format(i, f)
         end
 
-        vim.notify(msg, vim.log.levels.INFO, {
-                title = "quarrel",
-                ft = "lua",
-        })
+        table.insert(parts, f)
+    end
+
+    local msg = table.concat(parts, "\n")
+    if H.is_notify_hijacked then
+        msg = "{\n  " .. table.concat(parts, ",\n  ") .. ",\n}"
+    end
+
+    vim.notify(msg, vim.log.levels.INFO, {
+        title = "quarrel",
+        ft = "lua",
+    })
 end
 
 ---@private
@@ -983,53 +975,49 @@ end
 ---@param path string File path to write to.
 ---@param data quarrel.Argdata Data to encode and write.
 function H.write_db_file(path, data)
-        local dir = vim.fs.dirname(path)
-        if vim.fn.isdirectory(dir) == 0 then
-                vim.fn.mkdir(dir, "p")
-        end
+    local dir = vim.fs.dirname(path)
+    if vim.fn.isdirectory(dir) == 0 then
+        vim.fn.mkdir(dir, "p")
+    end
 
-        -- when dirty keys exist, read the current on-disk state and overlay
-        -- this instance's changes so other instances' entries aren't lost
-        if next(H.dirty_keys) then
-                local disk_data = H.read_db_file(path)
-                for key in pairs(H.dirty_keys) do
-                        if data.data[key] then
-                                disk_data.data[key] = data.data[key]
-                        end
-                end
-                data = disk_data
+    -- when dirty keys exist, read the current on-disk state and overlay
+    -- this instance's changes so other instances' entries aren't lost
+    if next(H.dirty_keys) then
+        local disk_data = H.read_db_file(path)
+        for key in pairs(H.dirty_keys) do
+            if data.data[key] then
+                disk_data.data[key] = data.data[key]
+            end
         end
+        data = disk_data
+    end
 
-        -- NOTE: `vim.mpack.encode` can't serialize functions, userdata, and
-        --       coroutines. it's probably not relevant to our usecase but I
-        --       believe that it's better to be safe than sorry.
-        local ok, packed = pcall(vim.mpack.encode, data)
-        if not ok then
-                vim.notify("quarrel: could not serialize database", vim.log.levels.WARN, { title = "quarrel" })
-                return
-        end
+    -- NOTE: `vim.mpack.encode` can't serialize functions, userdata, and
+    --       coroutines. it's probably not relevant to our usecase but I
+    --       believe that it's better to be safe than sorry.
+    local ok, packed = pcall(vim.mpack.encode, data)
+    if not ok then
+        vim.notify("quarrel: could not serialize database", vim.log.levels.WARN, { title = "quarrel" })
+        return
+    end
 
-        local tmp_path = path .. ".tmp"
-        local fp = io.open(tmp_path, "wb")
-        if not fp then
-                vim.notify(
-                        "quarrel: could not open temporary file for writing",
-                        vim.log.levels.WARN,
-                        { title = "quarrel" }
-                )
-                return
-        end
-        fp:write(packed)
-        fp:close()
+    local tmp_path = path .. ".tmp"
+    local fp = io.open(tmp_path, "wb")
+    if not fp then
+        vim.notify("quarrel: could not open temporary file for writing", vim.log.levels.WARN, { title = "quarrel" })
+        return
+    end
+    fp:write(packed)
+    fp:close()
 
-        -- replace the database file atomically; if the
-        -- swap fails, the original file is preserved.
-        local success, _err = vim.uv.fs_rename(tmp_path, path)
-        if not success then
-                os.remove(tmp_path)
-        end
+    -- replace the database file atomically; if the
+    -- swap fails, the original file is preserved.
+    local success, _err = vim.uv.fs_rename(tmp_path, path)
+    if not success then
+        os.remove(tmp_path)
+    end
 
-        H.dirty_keys = {}
+    H.dirty_keys = {}
 end
 
 ---@private
@@ -1039,30 +1027,30 @@ end
 ---
 ---@return quarrel.Argdata
 function H.read_db_file(path)
-        local db = {
-                _meta = {
-                        version = 1,
-                },
-                data = {},
-        }
+    local db = {
+        _meta = {
+            version = 1,
+        },
+        data = {},
+    }
 
-        local stat = vim.uv.fs_stat(path)
-        if not stat or stat.type ~= "file" or stat.size == 0 then
-                return db
-        end
-
-        local fp = io.open(path, "rb")
-        local content = fp and fp:read("*all") or ""
-        if fp then
-                fp:close()
-        end
-
-        local ok, decoded = pcall(vim.mpack.decode, content)
-        if ok and type(decoded) == "table" and decoded.data then
-                db = decoded
-        end
-
+    local stat = vim.uv.fs_stat(path)
+    if not stat or stat.type ~= "file" or stat.size == 0 then
         return db
+    end
+
+    local fp = io.open(path, "rb")
+    local content = fp and fp:read("*all") or ""
+    if fp then
+        fp:close()
+    end
+
+    local ok, decoded = pcall(vim.mpack.decode, content)
+    if ok and type(decoded) == "table" and decoded.data then
+        db = decoded
+    end
+
+    return db
 end
 
 ---@private
@@ -1074,7 +1062,7 @@ end
 ---
 ---@return string # The resolved absolute path.
 function H.resolve(path)
-        return vim.fs.normalize(vim.uv.fs_realpath(path) or vim.fs.abspath(path))
+    return vim.fs.normalize(vim.uv.fs_realpath(path) or vim.fs.abspath(path))
 end
 
 ---@private
@@ -1089,139 +1077,139 @@ end
 ---
 ---@return string? # The scope name, or nil if none found.
 function H.get_current_scope(cwd)
-        local scope, vcs_path, mtime, root
-        if not Quarrel.config.use_vcs then
+    local scope, vcs_path, mtime, root
+    if not Quarrel.config.use_vcs then
+        goto finalize
+    end
+
+    root = vim.fs.root(cwd, {
+        ".jj",
+        ".git",
+    })
+    if not root then
+        goto finalize
+    else
+        goto jujutsu
+    end
+
+    ::jujutsu::
+    -- 1. nearest ancestor bookmark: any commit descending from a bookmark
+    --    inherits its context until a newer bookmark is encountered.
+    -- 2. stable change ID: for anonymous work, uses the immutable change ID
+    --    to associate the arglist with the current logical task.
+    if vim.fn.isdirectory(vim.fs.joinpath(root, ".jj")) == 1 then
+        if vim.fn.executable("jj") == 0 then
+            goto git
+        end
+
+        vcs_path = vim.fs.joinpath(root, ".jj/working_copy/checkout")
+        local stat = vim.uv.fs_stat(vcs_path)
+        mtime = stat and stat.mtime.sec or 0
+
+        local cached = Quarrel.cache.vcs[vcs_path]
+        if cached and cached.mtime == mtime then
+            scope = cached.scope
+            goto finalize
+        end
+
+        -- stylua: ignore
+        local bookmarks_obj = vim.system({
+            "jj", "log",
+            "-r", "heads(ancestors(@) & (bookmarks() | remote_bookmarks()))",
+            "-T", 'bookmarks.join(" ")',
+            -- strip any pesky ANSI sequences
+            "--color=never", "--no-graph",
+        }, { text = true, cwd = cwd }):wait()
+
+        if bookmarks_obj.code == 0 and bookmarks_obj.stdout ~= "" then
+            local bookmarks = vim.trim(bookmarks_obj.stdout)
+            -- pick first bookmark from one or many
+            -- strip "at" marker (*) and remote suffixes (@)
+            scope = bookmarks:match("^(%S+)")
+            scope = scope:gsub("%*$", ""):gsub("@%S+$", "")
+            goto finalize
+        end
+
+        -- stylua: ignore
+        local change_id_obj = vim.system({
+            "jj", "log",
+            "-r", "@",
+            "-T", "change_id.shortest(8)",
+            -- strip any pesky ANSI sequences
+            "--color=never", "--no-graph",
+        }, { text = true, cwd = cwd }):wait()
+
+        if change_id_obj.code == 0 and change_id_obj.stdout ~= "" then
+            scope = vim.trim(change_id_obj.stdout)
+        end
+
+        -- project is managed by jujutsu.
+        -- do not fallback to git.
+        goto finalize
+    end
+
+    ::git::
+    -- 1. branch name: maps arglists to the active tracking branch.
+    -- 2. short SHA: provides isolation for detached HEAD states.
+    if vim.fn.isdirectory(vim.fs.joinpath(root, ".git")) == 1 then
+        if vim.fn.executable("git") == 0 then
+            goto finalize
+        end
+
+        vcs_path = vim.fs.joinpath(root, ".git/HEAD")
+        local stat = vim.uv.fs_stat(vcs_path)
+        mtime = stat and stat.mtime.sec or 0
+
+        local cached = Quarrel.cache.vcs[vcs_path]
+        if cached and cached.mtime == mtime then
+            scope = cached.scope
+            goto finalize
+        end
+
+        -- stylua: ignore
+        local branch_obj = vim.system({
+            -- strip any pesky ANSI color sequences
+            -- (git is shy, but you never know...)
+            "git", "-c", "color.ui=never",
+            "branch", "--show-current",
+        }, { text = true, cwd = cwd }):wait()
+
+        if branch_obj.code == 0 and branch_obj.stdout ~= "" then
+            local branch = vim.trim(branch_obj.stdout)
+            if branch ~= "" then
+                scope = branch
                 goto finalize
+            end
         end
 
-        root = vim.fs.root(cwd, {
-                ".jj",
-                ".git",
-        })
-        if not root then
-                goto finalize
-        else
-                goto jujutsu
+        -- stylua: ignore
+        local sha_obj = vim.system({
+            -- strip any pesky ANSI color sequences
+            -- (git is shy, but you never know...)
+            "git", "-c", "color.ui=never",
+            "rev-parse", "--short", "HEAD",
+        }, { text = true, cwd = cwd }):wait()
+
+        if sha_obj.code == 0 and sha_obj.stdout ~= "" then
+            local sha = vim.trim(sha_obj.stdout)
+            if sha ~= "" then
+                scope = sha
+            end
         end
 
-        ::jujutsu::
-        -- 1. nearest ancestor bookmark: any commit descending from a bookmark
-        --    inherits its context until a newer bookmark is encountered.
-        -- 2. stable change ID: for anonymous work, uses the immutable change ID
-        --    to associate the arglist with the current logical task.
-        if vim.fn.isdirectory(vim.fs.joinpath(root, ".jj")) == 1 then
-                if vim.fn.executable("jj") == 0 then
-                        goto git
-                end
+        -- project is managed by git.
+        -- do not fallback to ... what?
+        goto finalize
+    end
 
-                vcs_path = vim.fs.joinpath(root, ".jj/working_copy/checkout")
-                local stat = vim.uv.fs_stat(vcs_path)
-                mtime = stat and stat.mtime.sec or 0
+    ::finalize::
 
-                local cached = Quarrel.cache.vcs[vcs_path]
-                if cached and cached.mtime == mtime then
-                        scope = cached.scope
-                        goto finalize
-                end
-
-                -- stylua: ignore
-                local bookmarks_obj = vim.system({
-                        "jj", "log",
-                        "-r", "heads(ancestors(@) & (bookmarks() | remote_bookmarks()))",
-                        "-T", 'bookmarks.join(" ")',
-                        -- strip any pesky ANSI sequences
-                        "--color=never", "--no-graph",
-                }, { text = true, cwd = cwd }):wait()
-
-                if bookmarks_obj.code == 0 and bookmarks_obj.stdout ~= "" then
-                        local bookmarks = vim.trim(bookmarks_obj.stdout)
-                        -- pick first bookmark from one or many
-                        -- strip "at" marker (*) and remote suffixes (@)
-                        scope = bookmarks:match("^(%S+)")
-                        scope = scope:gsub("%*$", ""):gsub("@%S+$", "")
-                        goto finalize
-                end
-
-                -- stylua: ignore
-                local change_id_obj = vim.system({
-                        "jj", "log",
-                        "-r", "@",
-                        "-T", "change_id.shortest(8)",
-                        -- strip any pesky ANSI sequences
-                        "--color=never", "--no-graph",
-                }, { text = true, cwd = cwd }):wait()
-
-                if change_id_obj.code == 0 and change_id_obj.stdout ~= "" then
-                        scope = vim.trim(change_id_obj.stdout)
-                end
-
-                -- project is managed by jujutsu.
-                -- do not fallback to git.
-                goto finalize
-        end
-
-        ::git::
-        -- 1. branch name: maps arglists to the active tracking branch.
-        -- 2. short SHA: provides isolation for detached HEAD states.
-        if vim.fn.isdirectory(vim.fs.joinpath(root, ".git")) == 1 then
-                if vim.fn.executable("git") == 0 then
-                        goto finalize
-                end
-
-                vcs_path = vim.fs.joinpath(root, ".git/HEAD")
-                local stat = vim.uv.fs_stat(vcs_path)
-                mtime = stat and stat.mtime.sec or 0
-
-                local cached = Quarrel.cache.vcs[vcs_path]
-                if cached and cached.mtime == mtime then
-                        scope = cached.scope
-                        goto finalize
-                end
-
-                -- stylua: ignore
-                local branch_obj = vim.system({
-                        -- strip any pesky ANSI color sequences
-                        -- (git is shy, but you never know...)
-                        "git", "-c", "color.ui=never",
-                        "branch", "--show-current",
-                }, { text = true, cwd = cwd }):wait()
-
-                if branch_obj.code == 0 and branch_obj.stdout ~= "" then
-                        local branch = vim.trim(branch_obj.stdout)
-                        if branch ~= "" then
-                                scope = branch
-                                goto finalize
-                        end
-                end
-
-                -- stylua: ignore
-                local sha_obj = vim.system({
-                        -- strip any pesky ANSI color sequences
-                        -- (git is shy, but you never know...)
-                        "git", "-c", "color.ui=never",
-                        "rev-parse", "--short", "HEAD",
-                }, { text = true, cwd = cwd }):wait()
-
-                if sha_obj.code == 0 and sha_obj.stdout ~= "" then
-                        local sha = vim.trim(sha_obj.stdout)
-                        if sha ~= "" then
-                                scope = sha
-                        end
-                end
-
-                -- project is managed by git.
-                -- do not fallback to ... what?
-                goto finalize
-        end
-
-        ::finalize::
-
-        local result = (scope and scope ~= "") and scope or nil
-        -- only save cache hits
-        if vcs_path and scope then
-                Quarrel.cache.vcs[vcs_path] = { scope = result, mtime = mtime }
-        end
-        return result
+    local result = (scope and scope ~= "") and scope or nil
+    -- only save cache hits
+    if vcs_path and scope then
+        Quarrel.cache.vcs[vcs_path] = { scope = result, mtime = mtime }
+    end
+    return result
 end
 
 ---@private
@@ -1231,9 +1219,9 @@ end
 ---
 ---@return string # The resolved key (plain cwd or vcs composite).
 function H.get_active_key(cwd)
-        local real_cwd = H.resolve(cwd)
-        local scope = H.get_current_scope(real_cwd)
-        return scope and (real_cwd .. "\0" .. scope) or real_cwd
+    local real_cwd = H.resolve(cwd)
+    local scope = H.get_current_scope(real_cwd)
+    return scope and (real_cwd .. "\0" .. scope) or real_cwd
 end
 
 ---@private
@@ -1241,21 +1229,21 @@ end
 ---
 ---@return quarrel.History?, string? # history, cwd.
 function H.get_history_context()
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return nil, nil
-        end
+    local cwd = vim.uv.cwd()
+    if not cwd then
+        return nil, nil
+    end
 
-        local key = H.get_active_key(cwd)
-        local history = Quarrel.cache.db.data[key]
+    local key = H.get_active_key(cwd)
+    local history = Quarrel.cache.db.data[key]
 
-        -- if on a new branch, inherit from base cwd
-        local base_cwd = not history and key:match("^(.-)%z")
-        if base_cwd then
-                history = Quarrel.cache.db.data[base_cwd]
-        end
+    -- if on a new branch, inherit from base cwd
+    local base_cwd = not history and key:match("^(.-)%z")
+    if base_cwd then
+        history = Quarrel.cache.db.data[base_cwd]
+    end
 
-        return history, cwd
+    return history, cwd
 end
 
 ---@private
@@ -1263,10 +1251,10 @@ end
 ---
 ---@param files string[] List of absolute paths.
 function H.set_arglist(files)
-        -- always clear the list
-        vim.cmd("%argdelete")
+    -- always clear the list
+    vim.cmd("%argdelete")
 
-        vim.iter(files):each(H.argadd)
+    vim.iter(files):each(H.argadd)
 end
 
 ---@private
@@ -1274,27 +1262,27 @@ end
 ---
 --- Filters out any arguments that evaluate to a directory.
 function H.init_arglist()
-        if H.should_ignore() then
-                return
-        end
+    if H.should_ignore() then
+        return
+    end
 
-        local argf_no_dir = vim.iter(vim.v.argf):map(H.is_eligible):totable()
+    local argf_no_dir = vim.iter(vim.v.argf):map(H.is_eligible):totable()
 
-        if #argf_no_dir == 0 then
-                Quarrel.read()
-                return
-        end
+    if #argf_no_dir == 0 then
+        Quarrel.read()
+        return
+    end
 
-        local cwd = vim.uv.cwd()
-        if not cwd then
-                return
-        end
+    local cwd = vim.uv.cwd()
+    if not cwd then
+        return
+    end
 
-        local key = H.get_active_key(cwd)
-        local clean = H.update_history(key, argf_no_dir, "append")
-        if clean then
-                H.set_arglist(clean)
-        end
+    local key = H.get_active_key(cwd)
+    local clean = H.update_history(key, argf_no_dir, "append")
+    if clean then
+        H.set_arglist(clean)
+    end
 end
 
 ---@private
@@ -1304,20 +1292,20 @@ end
 ---
 ---@return string? # The absolute path if eligible, nil otherwise.
 function H.is_eligible(path)
-        if type(path) ~= "string" or path == "" then
-                return nil
-        end
+    if type(path) ~= "string" or path == "" then
+        return nil
+    end
 
-        local abspath = H.resolve(path)
-        if vim.fn.isdirectory(abspath) == 1 then
-                return nil
-        end
+    local abspath = H.resolve(path)
+    if vim.fn.isdirectory(abspath) == 1 then
+        return nil
+    end
 
-        if H.is_blacklisted(abspath) then
-                return nil
-        end
+    if H.is_blacklisted(abspath) then
+        return nil
+    end
 
-        return abspath
+    return abspath
 end
 
 ---@private
@@ -1325,7 +1313,7 @@ end
 ---
 ---@param path string Path to add.
 function H.argadd(path)
-        vim.cmd("$argadd " .. vim.fn.fnameescape(path))
+    vim.cmd("$argadd " .. vim.fn.fnameescape(path))
 end
 
 ---@private
@@ -1337,63 +1325,63 @@ end
 ---
 ---@return string[]? # The normalized list of files, or nil if no update occurred.
 function H.update_history(key, files, mode)
-        local history = Quarrel.cache.db.data[key] or { index = 0, entries = {} }
-        -- stylua: ignore
-        local normalized = vim.iter(files)
-                :map(H.is_eligible)
-                -- ":argdedup" happens here
-                :unique()
-                :totable()
+    local history = Quarrel.cache.db.data[key] or { index = 0, entries = {} }
+    -- stylua: ignore
+    local normalized = vim.iter(files)
+        :map(H.is_eligible)
+        -- ":argdedup" happens here
+        :unique()
+        :totable()
 
-        -- avoid creating empty histories for empty projects
-        if #normalized == 0 and #history.entries == 0 then
-                return nil
-        end
+    -- avoid creating empty histories for empty projects
+    if #normalized == 0 and #history.entries == 0 then
+        return nil
+    end
 
-        -- change detection: avoid redundant snapshots
-        if history.index > 0 and vim.deep_equal(normalized, history.entries[history.index]) then
-                return normalized
-        end
-
-        if mode == "overwrite" and history.index > 0 then
-                -- session update: replace current snapshot
-                history.entries[history.index] = normalized
-        elseif mode == "append" or (mode == "overwrite" and history.index == 0) then
-                -- checkpoint update: create new snapshot
-                table.insert(history.entries, normalized)
-                history.index = #history.entries
-
-                -- enforce history limit
-                local hist_level = Quarrel.config.hist_level
-                if #history.entries > hist_level then
-                        table.remove(history.entries, 1)
-                        history.index = #history.entries
-                end
-        else
-                error(("Invalid update mode %q (expected 'overwrite' or 'append')"):format(mode))
-        end
-
-        Quarrel.cache.db.data[key] = history
-        H.dirty_keys[key] = true
-
-        -- if it's a composite key, update base_cwd for backwards compatibility
-        local base_cwd = key:match("^(.-)%z")
-        if base_cwd then
-                H.update_history(base_cwd, normalized, mode)
-        end
-
+    -- change detection: avoid redundant snapshots
+    if history.index > 0 and vim.deep_equal(normalized, history.entries[history.index]) then
         return normalized
+    end
+
+    if mode == "overwrite" and history.index > 0 then
+        -- session update: replace current snapshot
+        history.entries[history.index] = normalized
+    elseif mode == "append" or (mode == "overwrite" and history.index == 0) then
+        -- checkpoint update: create new snapshot
+        table.insert(history.entries, normalized)
+        history.index = #history.entries
+
+        -- enforce history limit
+        local hist_level = Quarrel.config.hist_level
+        if #history.entries > hist_level then
+            table.remove(history.entries, 1)
+            history.index = #history.entries
+        end
+    else
+        error(("Invalid update mode %q (expected 'overwrite' or 'append')"):format(mode))
+    end
+
+    Quarrel.cache.db.data[key] = history
+    H.dirty_keys[key] = true
+
+    -- if it's a composite key, update base_cwd for backwards compatibility
+    local base_cwd = key:match("^(.-)%z")
+    if base_cwd then
+        H.update_history(base_cwd, normalized, mode)
+    end
+
+    return normalized
 end
 
 -- expose internal access for Busted and :checkhealth
 setmetatable(Quarrel, {
-        __index = function(_, key)
-                if key == "__INTERNAL_H" then
-                        return H
-                end
-        end,
-        -- block set and get metatable
-        __metatable = "INTERNAL",
+    __index = function(_, key)
+        if key == "__INTERNAL_H" then
+            return H
+        end
+    end,
+    -- block set and get metatable
+    __metatable = "INTERNAL",
 })
 
 return Quarrel

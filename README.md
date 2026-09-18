@@ -8,7 +8,7 @@ Using Neovim's built-in package manager:
 
 ```lua
 vim.pack.add({
-        src = "https://github.com/yilisharcs/quarrel.nvim",
+    src = "https://github.com/yilisharcs/quarrel.nvim",
 })
 ```
 
@@ -16,10 +16,10 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-        "yilisharcs/quarrel.nvim",
-        init = function()
-                vim.g.quarrel = { --[[ config goes here ]] }
-        end
+    "yilisharcs/quarrel.nvim",
+    init = function()
+        vim.g.quarrel = { --[[ config goes here ]] }
+    end
 }
 ```
 
@@ -111,50 +111,50 @@ To disable core functionality, set `vim.g.quarrel_disable` (globally) to `true`.
 ```lua
 ---@type quarrel.Opts
 vim.g.quarrel = {
-        -- Path to the database file where arglists are stored.
-        database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
-        -- Number of history entries to keep per project.
-        hist_level = 3,
-        -- Use version control state to manage isolated arglists.
-        -- Switching branches will automatically switch the active arglist stack.
-        -- [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
-        -- 
-        -- Supported:
-        --         - git
-        --         - jujutsu
-        use_vcs = false,
-        -- Whether to automatically echo the arglist on changes.
-        notify = false,
-        -- List of directory paths to ignore. Supports absolute paths or home-relative paths (e.g., `~/Projects/foo`).
-        blacklist = {
-                vim.fs.dirname(DEFAULT_DB),
-                "/tmp",
-                "/var/tmp",
-                vim.env.TMPDIR,
-        },
-        -- Module mappings. Use `false` to disable everything, or '' (empty string) to disable one.
-        mappings = {
-                -- Add current file to arglist.
-                add = "<leader>a",
-                -- Edit the arglist.
-                edit = "<leader>e",
-                -- Edit the database.
-                edit_db = "<leader>E",
-                -- Go to older arglist.
-                older = "<leader>[",
-                -- Go to newer arglist.
-                newer = "<leader>]",
-                -- Go to arg file 1.
-                arg1 = "<leader>h",
-                -- Go to arg file 2.
-                arg2 = "<leader>j",
-                -- Go to arg file 3.
-                arg3 = "<leader>k",
-                -- Go to arg file 4.
-                arg4 = "<leader>l",
-                -- Go to arg file 5.
-                arg5 = "<leader>;",
-        },
+    -- Path to the database file where arglists are stored.
+    database = vim.fs.joinpath(vim.fn.stdpath("state"), "quarrel/quarrel.msgpack"),
+    -- Number of history entries to keep per project.
+    hist_level = 3,
+    -- Use version control state to manage isolated arglists.
+    -- Switching branches will automatically switch the active arglist stack.
+    -- [EXPERIMENTAL] Check out the implementation: `H.get_current_scope(cwd)`.
+    -- 
+    -- Supported:
+    --     - git
+    --     - jujutsu
+    use_vcs = false,
+    -- Whether to automatically echo the arglist on changes.
+    notify = false,
+    -- List of directory paths to ignore. Supports absolute paths or home-relative paths (e.g., `~/Projects/foo`).
+    blacklist = {
+        vim.fs.dirname(DEFAULT_DB),
+        "/tmp",
+        "/var/tmp",
+        vim.env.TMPDIR,
+    },
+    -- Module mappings. Use `false` to disable everything, or '' (empty string) to disable one.
+    mappings = {
+        -- Add current file to arglist.
+        add = "<leader>a",
+        -- Edit the arglist.
+        edit = "<leader>e",
+        -- Edit the database.
+        edit_db = "<leader>E",
+        -- Go to older arglist.
+        older = "<leader>[",
+        -- Go to newer arglist.
+        newer = "<leader>]",
+        -- Go to arg file 1.
+        arg1 = "<leader>h",
+        -- Go to arg file 2.
+        arg2 = "<leader>j",
+        -- Go to arg file 3.
+        arg3 = "<leader>k",
+        -- Go to arg file 4.
+        arg4 = "<leader>l",
+        -- Go to arg file 5.
+        arg5 = "<leader>;",
+    },
 }
 ```
 
