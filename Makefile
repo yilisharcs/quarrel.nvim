@@ -21,3 +21,14 @@ format:
 .PHONY: test
 test:
 	nvim --clean --headless -l tests/run.lua
+
+.PHONY: vendor
+vendor: vendor/mini.doc
+
+.PHONY: vendor/mini.doc
+vendor/mini.doc:
+	rm -rf $@
+	git clone --quiet --filter=blob:none --no-checkout \
+		https://github.com/nvim-mini/mini.doc $@
+	git -C $@ -c advice.detachedHead=false checkout v0.18.0
+	rm -rf $@/.git

@@ -1,3 +1,0 @@
-[submodule "vendor/mini-doc"]
-	path = vendor/mini.doc
-	url = https://github.com/nvim-mini/mini.doc
