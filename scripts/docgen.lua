@@ -369,7 +369,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                 table.insert(merged_sections, {
                     type = "section",
                     info = { id = "@text" },
-                    [1] = "Fields {quarrel.Mappings} ~",
+                    [1] = "Fields {" .. spec.id .. ".Mappings} ~",
                 })
                 local m_fields = {}
                 H.collect_sections(blocks.mappings, {
@@ -382,7 +382,7 @@ H.prepare_doc_tree = function(doc, is_readme)
                     table.insert(merged_sections, mf)
 
                     -- NOTE: only add a blank line if the field has a multi-line
-                    --       description. why? argN was flattened on purpose.
+                    --       description.
                     if #mf > 1 then
                         table.insert(merged_sections, blank)
                     end

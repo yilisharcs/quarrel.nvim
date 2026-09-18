@@ -712,7 +712,7 @@ function H.setup_config(config)
         -- so the user adds to the blacklist rather than replace it.
         merged.blacklist = vim.iter({
             base.blacklist,
-            user.blacklist
+            user.blacklist,
         })
         :flatten()
         :unique()

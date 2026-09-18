@@ -15,6 +15,9 @@
         }
     },
     "workspace": {
+        "ignoreDir": [
+            "vendor"
+        ],
         "checkThirdParty": false,
         "library": [
             "$VIMRUNTIME/lua",
